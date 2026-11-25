@@ -50,6 +50,7 @@ function sanitizeSets(raw) {
       ? s.words.slice(0, 5000).map((w) => ({
           id: String(w?.id || '').slice(0, 64),
           term: String(w?.term || '').slice(0, 200),
+          ...(w?.wordType ? { wordType: String(w.wordType).slice(0, 30) } : {}),
           definition: String(w?.definition || '').slice(0, 500),
           createdAt: Number(w?.createdAt) || Date.now(),
           ...(w?.updatedAt ? { updatedAt: Number(w.updatedAt) } : {}),

@@ -64,6 +64,18 @@
           </div>
           <div class="form-grid">
             <input id="inputTerm" type="text" placeholder="Từ / cụm từ" maxlength="200">
+            <select id="inputType" aria-label="Loại từ">
+              <option value="">Loại từ</option>
+              <option value="n">Danh từ (n)</option>
+              <option value="v">Động từ (v)</option>
+              <option value="adj">Tính từ (adj)</option>
+              <option value="adv">Trạng từ (adv)</option>
+              <option value="prep">Giới từ (prep)</option>
+              <option value="conj">Liên từ (conj)</option>
+              <option value="pron">Đại từ (pron)</option>
+              <option value="interj">Thán từ (interj)</option>
+              <option value="phrase">Cụm từ (phrase)</option>
+            </select>
             <input id="inputDef" type="text" placeholder="Nghĩa / định nghĩa" maxlength="500">
             <button id="btnSaveWord" class="btn btn-primary" type="submit">Thêm</button>
           </div>
@@ -95,6 +107,7 @@
     <div id="flashcard" class="flashcard">
       <div class="flashcard-inner">
         <div class="face face-front">
+          <span id="cardType" class="card-type hidden"></span>
           <span id="cardTerm" class="card-term"></span>
           <span class="card-hint">Nhấn để xem nghĩa</span>
         </div>

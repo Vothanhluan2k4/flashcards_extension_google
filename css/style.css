@@ -35,7 +35,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
   color: var(--ink);
 }
@@ -468,17 +469,24 @@ button {
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1.4fr auto;
+  grid-template-columns: 1fr 122px 1.25fr auto;
   gap: 8px;
 }
 
-.form-grid input {
+.form-grid input,
+.form-grid select {
   min-width: 0;
-  padding: 9px 12px;
+  padding: 9px 10px;
   border: var(--border);
   background: #fffdf6;
   outline: none;
   transition: box-shadow 0.08s, background 0.08s;
+}
+
+.form-grid select {
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .form-grid input::placeholder {
@@ -486,7 +494,8 @@ button {
   font-weight: 500;
 }
 
-.form-grid input:focus {
+.form-grid input:focus,
+.form-grid select:focus {
   background: var(--surface);
   box-shadow: 3px 3px 0 var(--ink);
 }
@@ -553,10 +562,34 @@ button {
   min-width: 0;
 }
 
+.word-term-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 .word-term {
   display: block;
   font-weight: 800;
   overflow-wrap: anywhere;
+}
+
+.word-type,
+.card-type {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--yellow);
+  border: 1.5px solid var(--ink);
+  box-shadow: 1.5px 1.5px 0 var(--ink);
+  line-height: 1.35;
+}
+
+.card-type {
+  font-size: 12px;
+  padding: 2px 10px;
 }
 
 .word-def {

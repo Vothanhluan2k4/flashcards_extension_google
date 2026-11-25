@@ -33,6 +33,7 @@ const dom = {
   wordForm: el('wordForm'),
   formTitle: el('formTitle'),
   inputTerm: el('inputTerm'),
+  inputType: el('inputType'),
   inputDef: el('inputDef'),
   btnSaveWord: el('btnSaveWord'),
   btnCancelEdit: el('btnCancelEdit'),
@@ -46,6 +47,7 @@ const dom = {
   studyProgress: el('studyProgress'),
   btnCloseStudy: el('btnCloseStudy'),
   flashcard: el('flashcard'),
+  cardType: el('cardType'),
   cardTerm: el('cardTerm'),
   cardDef: el('cardDef'),
   btnPrev: el('btnPrev'),
@@ -224,13 +226,26 @@ function renderMain() {
   renderWords(set);
 }
 
+const WORD_TYPE_LABELS = {
+  n: 'Danh từ (n)',
+  v: 'Động từ (v)',
+  adj: 'Tính từ (adj)',
+  adv: 'Trạng từ (adv)',
+  prep: 'Giới từ (prep)',
+  conj: 'Liên từ (conj)',
+  pron: 'Đại từ (pron)',
+  interj: 'Thán từ (interj)',
+  phrase: 'Cụm từ (phrase)',
+};
+
 function renderWords(set) {
   const q = state.query.trim().toLowerCase();
   const words = set.words.filter(
     (w) =>
       !q ||
       w.term.toLowerCase().includes(q) ||
-      w.definition.toLowerCase().includes(q)
+      w.definition.toLowerCase().includes(q) ||
+      (w.wordType && w.wordType.toLowerCase().includes(q))
   );
 
   dom.wordList.innerHTML = '';
@@ -252,15 +267,27 @@ function renderWords(set) {
     const main = document.createElement('div');
     main.className = 'word-main';
 
+    const termRow = document.createElement('div');
+    termRow.className = 'word-term-row';
+
     const term = document.createElement('span');
     term.className = 'word-term';
     term.textContent = word.term;
+    termRow.appendChild(term);
+
+    if (word.wordType) {
+      const badge = document.createElement('span');
+      badge.className = 'word-type';
+      badge.textContent = word.wordType;
+      badge.title = WORD_TYPE_LABELS[word.wordType] || word.wordType;
+      termRow.appendChild(badge);
+    }
 
     const def = document.createElement('span');
     def.className = 'word-def';
     def.textContent = word.definition || '(chưa có nghĩa)';
 
-    main.append(term, def);
+    main.append(termRow, def);
 
     const actions = document.createElement('div');
     actions.className = 'word-actions';
@@ -360,6 +387,7 @@ function startEdit(wordId) {
 
   state.editingWordId = wordId;
   dom.inputTerm.value = word.term;
+  dom.inputType.value = word.wordType || '';
   dom.inputDef.value = word.definition;
   dom.formTitle.textContent = 'Sửa từ';
   dom.btnSaveWord.textContent = 'Lưu';
@@ -399,6 +427,7 @@ async function submitWord(event) {
   if (!set) return;
 
   const term = dom.inputTerm.value.trim();
+  const wordType = dom.inputType.value.trim().slice(0, 30);
   const definition = dom.inputDef.value.trim();
 
   if (!term) {
@@ -410,6 +439,7 @@ async function submitWord(event) {
     const word = set.words.find((w) => w.id === state.editingWordId);
     if (word) {
       word.term = term.slice(0, 200);
+      word.wordType = wordType;
       word.definition = definition.slice(0, 500);
       word.updatedAt = Date.now();
     }
@@ -417,6 +447,7 @@ async function submitWord(event) {
     set.words.push({
       id: uid(),
       term: term.slice(0, 200),
+      wordType,
       definition: definition.slice(0, 500),
       createdAt: Date.now(),
     });
@@ -457,6 +488,8 @@ function showCard() {
   if (!card) return;
 
   dom.flashcard.classList.remove('flipped');
+  dom.cardType.textContent = card.wordType ? (WORD_TYPE_LABELS[card.wordType] || card.wordType) : '';
+  dom.cardType.classList.toggle('hidden', !card.wordType);
   dom.cardTerm.textContent = card.term;
   dom.cardDef.textContent = card.definition || '(chưa có nghĩa)';
   dom.studyProgress.textContent = `${index + 1} / ${cards.length}`;
@@ -539,6 +572,7 @@ async function importJson(event) {
             .map((w) => ({
               id: uid(),
               term: String(w.term).slice(0, 200),
+              wordType: String(w.wordType || '').slice(0, 30),
               definition: String(w.definition || '').slice(0, 500),
               createdAt: Date.now(),
             }))
