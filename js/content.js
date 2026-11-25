@@ -5,22 +5,42 @@
     window.__flashcardsCaptureCleanup();
   }
 
-  let enabled = true;
+  const STYLE_ID = 'flashcards-allow-select-style';
+  let enabled = false;
   let host = null;
   let shadow = null;
   let lastSelectionRect = null;
   let selectedText = '';
 
-  chrome.storage.local.get('quickCaptureEnabled', (data) => {
-    if (typeof data.quickCaptureEnabled === 'boolean') {
-      enabled = data.quickCaptureEnabled;
-      if (!enabled) removeUI();
+  function syncAllowSelectStyle() {
+    const existing = document.getElementById(STYLE_ID);
+    if (!enabled) {
+      if (existing) existing.remove();
+      return;
     }
+    if (existing) return;
+    const styleEl = document.createElement('style');
+    styleEl.id = STYLE_ID;
+    styleEl.textContent = `
+      *, *::before, *::after {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        user-select: text !important;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(styleEl);
+  }
+
+  chrome.storage.local.get('quickCaptureEnabled', (data) => {
+    enabled = data.quickCaptureEnabled !== false;
+    syncAllowSelectStyle();
+    if (!enabled) removeUI();
   });
 
   const onStorageChanged = (changes, area) => {
     if (area === 'local' && changes.quickCaptureEnabled) {
       enabled = changes.quickCaptureEnabled.newValue !== false;
+      syncAllowSelectStyle();
       if (!enabled) removeUI();
     }
   };
@@ -327,50 +347,75 @@
     defInput.focus();
   }
 
-  function handleSelection(clientX, clientY) {
+  function readSelection(clientX, clientY) {
+    const sel = window.getSelection();
+    const text = sel ? sel.toString().trim() : '';
+    if (!text || text.length > 200) return null;
+
+    let rect = null;
+    if (sel.rangeCount) {
+      const r = sel.getRangeAt(0).getBoundingClientRect();
+      if (r && (r.width > 0 || r.height > 0)) {
+        rect = {
+          left: r.left,
+          right: r.right,
+          top: r.top,
+          bottom: r.bottom,
+          width: r.width,
+          height: r.height,
+        };
+      }
+    }
+
+    if (!rect) {
+      rect = {
+        left: clientX,
+        right: clientX,
+        top: clientY,
+        bottom: clientY,
+        width: 1,
+        height: 1,
+      };
+    }
+
+    return { text, rect };
+  }
+
+  function handleSelection(clientX, clientY, fallbackSnapshot) {
     if (!chrome.runtime?.id) {
       cleanup();
       return;
     }
 
     chrome.storage.local.get('quickCaptureEnabled', (data) => {
-      if (data.quickCaptureEnabled === false || !enabled) {
-        enabled = data.quickCaptureEnabled !== false;
+      enabled = data.quickCaptureEnabled !== false;
+      syncAllowSelectStyle();
+      if (!enabled) {
         removeUI();
         return;
       }
 
-      const sel = window.getSelection();
-      const text = sel ? sel.toString().trim() : '';
-      if (!text || text.length > 200) {
+      const snap = readSelection(clientX, clientY) || fallbackSnapshot;
+      if (!snap) {
         removeUI();
         return;
       }
 
-      let rect = null;
-      if (sel.rangeCount) {
-        const r = sel.getRangeAt(0).getBoundingClientRect();
-        if (r && (r.width > 0 || r.height > 0)) {
-          rect = r;
-        }
-      }
-
-      if (!rect) {
-        rect = {
-          left: clientX,
-          right: clientX,
-          top: clientY,
-          bottom: clientY,
-          width: 1,
-          height: 1,
-        };
-      }
-
-      selectedText = text;
-      lastSelectionRect = rect;
+      selectedText = snap.text;
+      lastSelectionRect = snap.rect;
       showFab(lastSelectionRect, selectedText);
     });
   }
+
+  const allowCopyEvent = (event) => {
+    if (!chrome.runtime?.id) {
+      cleanup();
+      return;
+    }
+    if (!enabled) return;
+    if (host && event.composedPath().includes(host)) return;
+    event.stopPropagation();
+  };
 
   const onMouseUp = (event) => {
     if (!chrome.runtime?.id) {
@@ -380,7 +425,8 @@
     if (!enabled) return;
     if (host && event.composedPath().includes(host)) return;
     const { clientX, clientY } = event;
-    setTimeout(() => handleSelection(clientX, clientY), 15);
+    const immediate = readSelection(clientX, clientY);
+    setTimeout(() => handleSelection(clientX, clientY, immediate), 15);
   };
 
   const onMouseDown = (event) => {
@@ -393,9 +439,13 @@
   };
 
   function cleanup() {
-    document.removeEventListener('mouseup', onMouseUp, true);
+    window.removeEventListener('selectstart', allowCopyEvent, true);
+    window.removeEventListener('copy', allowCopyEvent, true);
+    window.removeEventListener('mouseup', onMouseUp, true);
     document.removeEventListener('mousedown', onMouseDown, true);
     document.removeEventListener('keydown', onKeyDown);
+    const styleEl = document.getElementById(STYLE_ID);
+    if (styleEl) styleEl.remove();
     if (chrome.runtime?.id) {
       chrome.storage.onChanged.removeListener(onStorageChanged);
     }
@@ -408,7 +458,9 @@
 
   window.__flashcardsCaptureCleanup = cleanup;
 
-  document.addEventListener('mouseup', onMouseUp, true);
+  window.addEventListener('selectstart', allowCopyEvent, true);
+  window.addEventListener('copy', allowCopyEvent, true);
+  window.addEventListener('mouseup', onMouseUp, true);
   document.addEventListener('mousedown', onMouseDown, true);
   document.addEventListener('keydown', onKeyDown);
 })();
