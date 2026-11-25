@@ -4,6 +4,7 @@ const state = {
   sets: [],
   activeSetId: null,
   editingWordId: null,
+  selectedWordIds: new Set(),
   query: '',
   study: { cards: [], index: 0 },
 };
@@ -39,6 +40,11 @@ const dom = {
   btnCancelEdit: el('btnCancelEdit'),
 
   searchInput: el('searchInput'),
+  btnSelectAll: el('btnSelectAll'),
+  bulkBar: el('bulkBar'),
+  bulkCount: el('bulkCount'),
+  btnClearSelect: el('btnClearSelect'),
+  btnDeleteSelected: el('btnDeleteSelected'),
   wordList: el('wordList'),
   wordEmpty: el('wordEmpty'),
 
@@ -231,16 +237,37 @@ const WORD_TYPE_LABELS = {
   phrase: 'Cụm từ (phrase)',
 };
 
-function renderWords(set) {
+function getFilteredWords(set) {
   const q = state.query.trim().toLowerCase();
-  const words = set.words.filter(
+  return set.words.filter(
     (w) =>
       !q ||
       w.term.toLowerCase().includes(q) ||
       w.definition.toLowerCase().includes(q) ||
       (w.wordType && w.wordType.toLowerCase().includes(q))
   );
+}
 
+function renderBulkBar(set, visibleWords) {
+  const validIds = new Set(set.words.map((w) => w.id));
+  for (const id of Array.from(state.selectedWordIds)) {
+    if (!validIds.has(id)) state.selectedWordIds.delete(id);
+  }
+
+  const count = state.selectedWordIds.size;
+  dom.bulkBar.classList.toggle('hidden', count === 0);
+  dom.bulkCount.textContent = `Đã chọn ${count} từ`;
+
+  dom.btnSelectAll.classList.toggle('hidden', visibleWords.length === 0);
+  const allVisibleSelected =
+    visibleWords.length > 0 && visibleWords.every((w) => state.selectedWordIds.has(w.id));
+  dom.btnSelectAll.textContent = allVisibleSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
+}
+
+function renderWords(set) {
+  const words = getFilteredWords(set);
+
+  renderBulkBar(set, words);
   dom.wordList.innerHTML = '';
 
   if (!words.length) {
@@ -254,8 +281,27 @@ function renderWords(set) {
   dom.wordEmpty.classList.add('hidden');
 
   words.forEach((word) => {
+    const isSelected = state.selectedWordIds.has(word.id);
     const li = document.createElement('li');
-    li.className = 'word-card';
+    li.className = 'word-card' + (isSelected ? ' selected' : '');
+
+    const left = document.createElement('div');
+    left.className = 'word-left';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'word-check';
+    checkbox.checked = isSelected;
+    checkbox.setAttribute('aria-label', `Chọn từ ${word.term}`);
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        state.selectedWordIds.add(word.id);
+      } else {
+        state.selectedWordIds.delete(word.id);
+      }
+      li.classList.toggle('selected', checkbox.checked);
+      renderBulkBar(set, words);
+    });
 
     const main = document.createElement('div');
     main.className = 'word-main';
@@ -281,6 +327,7 @@ function renderWords(set) {
     def.textContent = word.definition || '(chưa có nghĩa)';
 
     main.append(termRow, def);
+    left.append(checkbox, main);
 
     const actions = document.createElement('div');
     actions.className = 'word-actions';
@@ -298,7 +345,7 @@ function renderWords(set) {
     delBtn.addEventListener('click', () => deleteWord(word.id));
 
     actions.append(editBtn, delBtn);
-    li.append(main, actions);
+    li.append(left, actions);
     dom.wordList.appendChild(li);
   });
 }
@@ -321,6 +368,7 @@ async function createSet() {
 
   state.sets.push(set);
   state.activeSetId = set.id;
+  state.selectedWordIds.clear();
   resetForm();
   state.query = '';
   dom.searchInput.value = '';
@@ -331,6 +379,7 @@ async function createSet() {
 
 function selectSet(id) {
   state.activeSetId = id;
+  state.selectedWordIds.clear();
   state.query = '';
   dom.searchInput.value = '';
   resetForm();
@@ -407,10 +456,55 @@ async function deleteWord(wordId) {
   if (!ok) return;
 
   set.words = set.words.filter((w) => w.id !== wordId);
+  state.selectedWordIds.delete(wordId);
   if (state.editingWordId === wordId) resetForm();
 
   await persist();
   render();
+}
+
+async function deleteSelectedWords() {
+  const set = getActiveSet();
+  if (!set || !state.selectedWordIds.size) return;
+
+  const count = state.selectedWordIds.size;
+  const msg =
+    count === 1
+      ? `Xóa từ "${(set.words.find((w) => state.selectedWordIds.has(w.id)) || {}).term || ''}"?`
+      : `Xóa ${count} từ đã chọn?`;
+
+  const ok = await showConfirm(msg, 'Xóa từ đã chọn');
+  if (!ok) return;
+
+  set.words = set.words.filter((w) => !state.selectedWordIds.has(w.id));
+  if (state.editingWordId && state.selectedWordIds.has(state.editingWordId)) {
+    resetForm();
+  }
+  state.selectedWordIds.clear();
+
+  await persist();
+  render();
+}
+
+function toggleSelectAll() {
+  const set = getActiveSet();
+  if (!set) return;
+
+  const visible = getFilteredWords(set);
+  const allSelected = visible.length > 0 && visible.every((w) => state.selectedWordIds.has(w.id));
+
+  if (allSelected) {
+    visible.forEach((w) => state.selectedWordIds.delete(w.id));
+  } else {
+    visible.forEach((w) => state.selectedWordIds.add(w.id));
+  }
+  renderWords(set);
+}
+
+function clearSelection() {
+  state.selectedWordIds.clear();
+  const set = getActiveSet();
+  if (set) renderWords(set);
 }
 
 async function submitWord(event) {
@@ -758,6 +852,10 @@ dom.searchInput.addEventListener('input', () => {
   const set = getActiveSet();
   if (set) renderWords(set);
 });
+
+dom.btnSelectAll.addEventListener('click', toggleSelectAll);
+dom.btnClearSelect.addEventListener('click', clearSelection);
+dom.btnDeleteSelected.addEventListener('click', deleteSelectedWords);
 
 dom.btnStudy.addEventListener('click', openStudy);
 dom.btnCloseStudy.addEventListener('click', closeStudy);

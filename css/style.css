@@ -495,6 +495,39 @@ button {
   text-transform: uppercase;
 }
 
+.list-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.list-head-left .btn {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: var(--yellow);
+  border: var(--border);
+  box-shadow: var(--hard-shadow);
+}
+
+.bulk-count {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .list-head input {
   width: 180px;
   padding: 7px 10px;
@@ -531,7 +564,47 @@ button {
   border: var(--border);
   box-shadow: var(--hard-shadow);
   padding: 10px 12px;
-  transition: transform 0.08s, box-shadow 0.08s;
+  transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
+}
+
+.word-card.selected {
+  background: #fff0fb;
+}
+
+.word-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.word-check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  flex: none;
+  margin: 0;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.08s;
+}
+
+.word-check:checked {
+  background: var(--pink);
+}
+
+.word-check:checked::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2.5px solid var(--ink);
+  border-bottom: 2.5px solid var(--ink);
+  transform: rotate(-45deg) translate(1px, -1px);
 }
 
 .word-card:hover {

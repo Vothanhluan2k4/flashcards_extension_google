@@ -83,8 +83,19 @@
         </form>
 
         <div class="list-head">
-          <span id="listLabel">Danh sách từ</span>
+          <div class="list-head-left">
+            <span id="listLabel">Danh sách từ</span>
+            <button id="btnSelectAll" class="btn btn-ghost btn-xs hidden" type="button">Chọn tất cả</button>
+          </div>
           <input id="searchInput" type="search" placeholder="Tìm từ..." autocomplete="off">
+        </div>
+
+        <div id="bulkBar" class="bulk-bar hidden">
+          <span id="bulkCount" class="bulk-count"></span>
+          <div class="bulk-actions">
+            <button id="btnClearSelect" class="btn btn-ghost btn-xs" type="button">Bỏ chọn</button>
+            <button id="btnDeleteSelected" class="btn btn-danger btn-xs" type="button">Xóa đã chọn</button>
+          </div>
         </div>
 
         <ul id="wordList" class="word-list"></ul>
