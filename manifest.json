@@ -3,9 +3,21 @@
   "name": "Flashcards - Học từ vựng",
   "version": "1.0.0",
   "description": "Tạo, lưu và học các bộ thẻ từ vựng ngay trên trình duyệt. Dữ liệu lưu cục bộ bằng chrome.storage.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Flashcards"
+    "default_title": "Flashcards",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "permissions": ["storage"],
   "host_permissions": ["http://localhost:3000/*"]
