@@ -672,6 +672,8 @@ function showCard() {
     renderQuizOptions(card);
     dom.studyTip.textContent = 'Mẹo: nhấn phím 1–4 để chọn nhanh đáp án, → để qua thẻ tiếp';
   }
+
+  speakWord(card.term);
 }
 
 function renderQuizOptions(card) {
