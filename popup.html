@@ -109,23 +109,52 @@
         <p class="study-label">Đang học</p>
         <h3 id="studySetName"></h3>
       </div>
+      <div class="study-modes" role="group" aria-label="Phương thức học">
+        <button class="mode-btn active" data-mode="flip" type="button">Lật thẻ</button>
+        <button class="mode-btn" data-mode="type" type="button">Gõ từ</button>
+        <button class="mode-btn" data-mode="quiz" type="button">Trắc nghiệm</button>
+        <button class="mode-btn" data-mode="random" type="button">Ngẫu nhiên</button>
+      </div>
       <div class="study-header-right">
         <span id="studyProgress" class="study-progress"></span>
         <button id="btnCloseStudy" class="close-btn" title="Thoát" type="button">&times;</button>
       </div>
     </header>
 
-    <div id="flashcard" class="flashcard">
-      <div class="flashcard-inner">
-        <div class="face face-front">
-          <span id="cardType" class="card-type hidden"></span>
-          <span id="cardTerm" class="card-term"></span>
-          <span class="card-hint">Nhấn để xem nghĩa</span>
+    <div class="study-stage">
+      <div id="flashcard" class="flashcard">
+        <div class="flashcard-inner">
+          <div class="face face-front">
+            <span id="cardType" class="card-type hidden"></span>
+            <span id="cardTerm" class="card-term"></span>
+            <span class="card-hint">Nhấn để xem nghĩa</span>
+          </div>
+          <div class="face face-back">
+            <span id="cardDef" class="card-def"></span>
+            <span class="card-hint">Nhấn để lật lại</span>
+          </div>
         </div>
-        <div class="face face-back">
-          <span id="cardDef" class="card-def"></span>
-          <span class="card-hint">Nhấn để lật lại</span>
+      </div>
+
+      <div id="typeBox" class="study-card hidden">
+        <span class="study-mode-tag">Gõ từ tiếng Anh / từ vựng</span>
+        <span id="typeWordType" class="card-type hidden"></span>
+        <p id="typePrompt" class="study-prompt"></p>
+        <form id="typeForm" class="type-form" autocomplete="off">
+          <input id="typeInput" type="text" placeholder="Nhập từ tương ứng..." maxlength="200">
+          <button id="btnCheckType" class="btn btn-primary" type="submit">Kiểm tra</button>
+        </form>
+        <p id="typeFeedback" class="study-feedback hidden"></p>
+      </div>
+
+      <div id="quizBox" class="study-card hidden">
+        <span class="study-mode-tag">Chọn đáp án đúng</span>
+        <div class="quiz-prompt-row">
+          <span id="quizWordType" class="card-type hidden"></span>
+          <p id="quizPrompt" class="study-prompt"></p>
         </div>
+        <div id="quizOptions" class="quiz-options"></div>
+        <p id="quizFeedback" class="study-feedback hidden"></p>
       </div>
     </div>
 
@@ -135,7 +164,7 @@
       <button id="btnNext" class="btn btn-light" type="button">Tiếp</button>
     </div>
 
-    <p class="study-tip">Mẹo: dùng phím &larr; &rarr; để chuyển thẻ, Space để lật</p>
+    <p id="studyTip" class="study-tip">Mẹo: dùng phím &larr; &rarr; để chuyển thẻ, Space để lật</p>
   </div>
 
   <div id="dialogOverlay" class="dialog-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">

@@ -6,7 +6,16 @@ const state = {
   editingWordId: null,
   selectedWordIds: new Set(),
   query: '',
-  study: { cards: [], index: 0 },
+  study: {
+    cards: [],
+    allWords: [],
+    index: 0,
+    mode: 'flip',
+    cardModes: [],
+    answered: 0,
+    correct: 0,
+    checked: false,
+  },
 };
 
 const el = (id) => document.getElementById(id);
@@ -55,6 +64,19 @@ const dom = {
   cardType: el('cardType'),
   cardTerm: el('cardTerm'),
   cardDef: el('cardDef'),
+  typeBox: el('typeBox'),
+  typeWordType: el('typeWordType'),
+  typePrompt: el('typePrompt'),
+  typeForm: el('typeForm'),
+  typeInput: el('typeInput'),
+  btnCheckType: el('btnCheckType'),
+  typeFeedback: el('typeFeedback'),
+  quizBox: el('quizBox'),
+  quizWordType: el('quizWordType'),
+  quizPrompt: el('quizPrompt'),
+  quizOptions: el('quizOptions'),
+  quizFeedback: el('quizFeedback'),
+  studyTip: el('studyTip'),
   btnPrev: el('btnPrev'),
   btnFlip: el('btnFlip'),
   btnNext: el('btnNext'),
@@ -532,6 +554,41 @@ async function submitWord(event) {
 
 /* ---------- Study ---------- */
 
+const BASE_MODES = ['flip', 'type', 'quiz'];
+
+function shuffleArray(arr) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function buildCardModes(count, mode) {
+  return Array.from({ length: count }, () =>
+    mode === 'random' ? BASE_MODES[Math.floor(Math.random() * BASE_MODES.length)] : mode
+  );
+}
+
+function updateModeButtons() {
+  document.querySelectorAll('.mode-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.mode === state.study.mode);
+  });
+}
+
+function setStudyMode(mode) {
+  if (!state.study.cards.length) return;
+  state.study.mode = mode;
+  state.study.cards = mode === 'random' ? shuffleArray(state.study.allWords) : state.study.allWords.slice();
+  state.study.cardModes = buildCardModes(state.study.cards.length, mode);
+  state.study.index = 0;
+  state.study.answered = 0;
+  state.study.correct = 0;
+  updateModeButtons();
+  showCard();
+}
+
 function openStudy() {
   const set = getActiveSet();
   if (!set) return;
@@ -541,8 +598,19 @@ function openStudy() {
     return;
   }
 
-  state.study = { cards: set.words.slice(), index: 0 };
+  const mode = state.study.mode || 'flip';
+  state.study = {
+    cards: mode === 'random' ? shuffleArray(set.words) : set.words.slice(),
+    allWords: set.words.slice(),
+    index: 0,
+    mode,
+    cardModes: buildCardModes(set.words.length, mode),
+    answered: 0,
+    correct: 0,
+    checked: false,
+  };
   dom.studySetName.textContent = set.name;
+  updateModeButtons();
   dom.studyOverlay.classList.remove('hidden');
   showCard();
 }
@@ -552,32 +620,151 @@ function closeStudy() {
   dom.flashcard.classList.remove('flipped');
 }
 
+function getCurrentCardMode() {
+  return state.study.cardModes[state.study.index] || 'flip';
+}
+
 function showCard() {
   const { cards, index } = state.study;
   const card = cards[index];
   if (!card) return;
 
-  dom.flashcard.classList.remove('flipped');
-  dom.cardType.textContent = card.wordType ? (WORD_TYPE_LABELS[card.wordType] || card.wordType) : '';
-  dom.cardType.classList.toggle('hidden', !card.wordType);
-  dom.cardTerm.textContent = card.term;
-  dom.cardDef.textContent = card.definition || '(chưa có nghĩa)';
+  const currentMode = getCurrentCardMode();
+  state.study.checked = false;
+
   dom.studyProgress.textContent = `${index + 1} / ${cards.length}`;
   dom.btnPrev.disabled = index === 0;
-  dom.btnNext.disabled = index === cards.length - 1;
+  dom.btnNext.disabled = false;
+
+  dom.flashcard.classList.toggle('hidden', currentMode !== 'flip');
+  dom.typeBox.classList.toggle('hidden', currentMode !== 'type');
+  dom.quizBox.classList.toggle('hidden', currentMode !== 'quiz');
+  dom.btnFlip.classList.toggle('hidden', currentMode !== 'flip');
+
+  const typeLabel = card.wordType ? (WORD_TYPE_LABELS[card.wordType] || card.wordType) : '';
+
+  if (currentMode === 'flip') {
+    dom.flashcard.classList.remove('flipped');
+    dom.cardType.textContent = typeLabel;
+    dom.cardType.classList.toggle('hidden', !card.wordType);
+    dom.cardTerm.textContent = card.term;
+    dom.cardDef.textContent = card.definition || '(chưa có nghĩa)';
+    dom.studyTip.textContent = 'Mẹo: dùng phím ← → để chuyển thẻ, Space để lật';
+  } else if (currentMode === 'type') {
+    dom.typeWordType.textContent = typeLabel;
+    dom.typeWordType.classList.toggle('hidden', !card.wordType);
+    dom.typePrompt.textContent = card.definition || '(chưa có nghĩa - hãy gõ từ)';
+    dom.typeInput.value = '';
+    dom.typeInput.disabled = false;
+    dom.btnCheckType.disabled = false;
+    dom.typeFeedback.classList.add('hidden');
+    dom.typeFeedback.className = 'study-feedback hidden';
+    dom.studyTip.textContent = 'Mẹo: gõ từ rồi nhấn Enter để kiểm tra, Enter lần nữa để qua thẻ tiếp';
+    requestAnimationFrame(() => dom.typeInput.focus());
+  } else if (currentMode === 'quiz') {
+    dom.quizWordType.textContent = typeLabel;
+    dom.quizWordType.classList.toggle('hidden', !card.wordType);
+    dom.quizPrompt.textContent = card.term;
+    dom.quizFeedback.classList.add('hidden');
+    dom.quizFeedback.className = 'study-feedback hidden';
+    renderQuizOptions(card);
+    dom.studyTip.textContent = 'Mẹo: nhấn phím 1–4 để chọn nhanh đáp án, → để qua thẻ tiếp';
+  }
+}
+
+function renderQuizOptions(card) {
+  const correctDef = card.definition || '(chưa có nghĩa)';
+  const distractors = shuffleArray(
+    state.study.allWords
+      .filter((w) => w.id !== card.id)
+      .map((w) => w.definition || '(chưa có nghĩa)')
+      .filter((def, i, arr) => def !== correctDef && arr.indexOf(def) === i)
+  ).slice(0, 3);
+
+  const options = shuffleArray([
+    { text: correctDef, isCorrect: true },
+    ...distractors.map((text) => ({ text, isCorrect: false })),
+  ]);
+
+  dom.quizOptions.innerHTML = '';
+  options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quiz-opt';
+    btn.dataset.correct = opt.isCorrect ? '1' : '0';
+    btn.textContent = `${idx + 1}. ${opt.text}`;
+    btn.addEventListener('click', () => handleQuizPick(btn, opt.isCorrect, correctDef));
+    dom.quizOptions.appendChild(btn);
+  });
+}
+
+function handleQuizPick(pickedBtn, isCorrect, correctDef) {
+  if (state.study.checked) return;
+  state.study.checked = true;
+  state.study.answered += 1;
+  if (isCorrect) state.study.correct += 1;
+
+  dom.quizOptions.querySelectorAll('.quiz-opt').forEach((btn) => {
+    btn.disabled = true;
+    if (btn.dataset.correct === '1') {
+      btn.classList.add('correct');
+    } else if (btn === pickedBtn) {
+      btn.classList.add('wrong');
+    }
+  });
+
+  dom.quizFeedback.textContent = isCorrect
+    ? 'Chính xác!'
+    : `Chưa đúng! Đáp án: ${correctDef}`;
+  dom.quizFeedback.className = `study-feedback ${isCorrect ? 'ok' : 'err'}`;
+}
+
+function submitTypeAnswer(event) {
+  event.preventDefault();
+  const card = state.study.cards[state.study.index];
+  if (!card) return;
+
+  if (state.study.checked) {
+    nextCard();
+    return;
+  }
+
+  const answer = dom.typeInput.value.trim().toLowerCase();
+  if (!answer) {
+    dom.typeInput.focus();
+    return;
+  }
+
+  const expected = card.term.trim().toLowerCase();
+  const isCorrect = answer === expected;
+
+  state.study.checked = true;
+  state.study.answered += 1;
+  if (isCorrect) state.study.correct += 1;
+
+  dom.typeInput.disabled = true;
+  dom.btnCheckType.disabled = true;
+  dom.typeFeedback.textContent = isCorrect
+    ? 'Chính xác!'
+    : `Chưa đúng! Đáp án: ${card.term}`;
+  dom.typeFeedback.className = `study-feedback ${isCorrect ? 'ok' : 'err'}`;
 }
 
 function flipCard() {
+  if (getCurrentCardMode() !== 'flip') return;
   dom.flashcard.classList.toggle('flipped');
 }
 
 async function nextCard() {
-  const { cards, index } = state.study;
+  const { cards, index, answered, correct } = state.study;
   if (index < cards.length - 1) {
     state.study.index += 1;
     showCard();
   } else {
-    await showAlert('Bạn đã học hết bộ thẻ.', 'Hoàn thành');
+    const summary = answered > 0
+      ? `Bạn đã học hết bộ thẻ! (Đúng ${correct}/${answered} câu)`
+      : 'Bạn đã học hết bộ thẻ.';
+    await showAlert(summary, 'Hoàn thành');
     closeStudy();
   }
 }
@@ -853,6 +1040,10 @@ dom.flashcard.addEventListener('click', flipCard);
 dom.btnFlip.addEventListener('click', flipCard);
 dom.btnNext.addEventListener('click', nextCard);
 dom.btnPrev.addEventListener('click', prevCard);
+dom.typeForm.addEventListener('submit', submitTypeAnswer);
+document.querySelectorAll('.mode-btn').forEach((btn) => {
+  btn.addEventListener('click', () => setStudyMode(btn.dataset.mode));
+});
 
 dom.dialogBox.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -892,15 +1083,27 @@ document.addEventListener('keydown', (event) => {
 
   if (dom.studyOverlay.classList.contains('hidden')) return;
 
-  if (event.key === 'ArrowRight') {
+  const isTyping = document.activeElement === dom.typeInput;
+  const currentMode = getCurrentCardMode();
+
+  if (event.key === 'Escape') {
+    closeStudy();
+  } else if (currentMode === 'type' && state.study.checked && event.key === 'Enter') {
+    event.preventDefault();
+    nextCard();
+  } else if (isTyping) {
+    return;
+  } else if (event.key === 'ArrowRight') {
     nextCard();
   } else if (event.key === 'ArrowLeft') {
     prevCard();
-  } else if (event.key === ' ') {
+  } else if (event.key === ' ' && currentMode === 'flip') {
     event.preventDefault();
     flipCard();
-  } else if (event.key === 'Escape') {
-    closeStudy();
+  } else if (currentMode === 'quiz' && ['1', '2', '3', '4'].includes(event.key)) {
+    const idx = Number(event.key) - 1;
+    const btn = dom.quizOptions.querySelectorAll('.quiz-opt')[idx];
+    if (btn && !btn.disabled) btn.click();
   }
 });
 
