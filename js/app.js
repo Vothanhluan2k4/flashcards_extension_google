@@ -343,6 +343,7 @@ function renderWords(set) {
     if (word.wordType) {
       const badge = document.createElement('span');
       badge.className = 'word-type';
+      badge.dataset.type = word.wordType;
       badge.textContent = word.wordType;
       badge.title = WORD_TYPE_LABELS[word.wordType] || word.wordType;
       termRow.appendChild(badge);
@@ -614,7 +615,7 @@ function stopFireworks() {
 }
 
 function spawnBurst(cx, cy, count) {
-  const colors = ['#fde68a', '#ffa686', '#aee5be', '#a5c8e4', '#f79489', '#ffffff'];
+  const colors = ['#ffe599', '#ff94ae', '#99e2b4', '#a5d8ff', '#d8ccff', '#ffbe98'];
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.35;
     const speed = 2.6 + Math.random() * 5.2;
@@ -759,12 +760,14 @@ function showCard() {
   if (currentMode === 'flip') {
     dom.flashcard.classList.remove('flipped');
     dom.cardType.textContent = typeLabel;
+    dom.cardType.dataset.type = card.wordType || '';
     dom.cardType.classList.toggle('hidden', !card.wordType);
     dom.cardTerm.textContent = card.term;
     dom.cardDef.textContent = card.definition || '(chưa có nghĩa)';
-    dom.studyTip.textContent = 'Mẹo: dùng phím ← → để chuyển thẻ, Space để lật';
+    dom.studyTip.textContent = 'Mẹo: dùng phím ← → để chuyển thẻ, Space để lật, S để nghe';
   } else if (currentMode === 'type') {
     dom.typeWordType.textContent = typeLabel;
+    dom.typeWordType.dataset.type = card.wordType || '';
     dom.typeWordType.classList.toggle('hidden', !card.wordType);
     dom.typePrompt.textContent = card.definition || '(chưa có nghĩa - hãy gõ từ)';
     dom.typeInput.value = '';
@@ -776,6 +779,7 @@ function showCard() {
     requestAnimationFrame(() => dom.typeInput.focus());
   } else if (currentMode === 'quiz') {
     dom.quizWordType.textContent = typeLabel;
+    dom.quizWordType.dataset.type = card.wordType || '';
     dom.quizWordType.classList.toggle('hidden', !card.wordType);
     dom.quizPrompt.textContent = card.term;
     dom.quizFeedback.classList.add('hidden');

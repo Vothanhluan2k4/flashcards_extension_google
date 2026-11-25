@@ -63,7 +63,7 @@
         align-items: center;
         gap: 6px;
         padding: 6px 11px;
-        background: #f2e4c6;
+        background: #ffe599;
         color: #1e1e24;
         border: 2px solid #1e1e24;
         box-shadow: 3px 3px 0 #1e1e24;
@@ -74,7 +74,7 @@
         transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
       }
       .fc-fab:hover {
-        background: #ffa686;
+        background: #a5d8ff;
         transform: translate(-1px, -1px);
         box-shadow: 4px 4px 0 #1e1e24;
       }
@@ -83,7 +83,7 @@
         place-items: center;
         width: 18px;
         height: 18px;
-        background: #ffa686;
+        background: #ff94ae;
         border: 1.5px solid #1e1e24;
         font-size: 11px;
         font-weight: 900;
@@ -92,7 +92,7 @@
         position: fixed;
         pointer-events: auto;
         width: 310px;
-        background: #faf7f2;
+        background: #faf8f5;
         color: #1e1e24;
         border: 3px solid #1e1e24;
         box-shadow: 6px 6px 0 #1e1e24;
@@ -127,7 +127,7 @@
         place-items: center;
         color: #1e1e24;
       }
-      .fc-close:hover { background: #ffd1bf; }
+      .fc-close:hover { background: #ffc2d1; }
       .fc-field {
         width: 100%;
         padding: 10px 12px;
@@ -163,7 +163,7 @@
         cursor: pointer;
       }
       .fc-btn-primary {
-        background: #ffa686;
+        background: #99e2b4;
       }
       .fc-btn:hover {
         transform: translate(-1px, -1px);

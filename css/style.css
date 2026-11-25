@@ -1,17 +1,19 @@
 :root {
-  --bg: #faf7f2;
+  --bg: #faf8f5;
   --surface: #ffffff;
   --surface-soft: #fcfbf8;
-  --sidebar: #f2e4c6;
+  --sidebar: #ffe599;
   --ink: #1e1e24;
-  --pink: #ffa686;
-  --pink-hover: #ffd1bf;
-  --blue: #dce8f2;
-  --teal: #4fa39b;
-  --yellow: #fde68a;
-  --mint: #aee5be;
-  --red: #f79489;
-  --muted: #6e6a64;
+  --pink: #ff94ae;
+  --pink-hover: #ffc2d1;
+  --blue: #c8d7ff;
+  --sky: #a5d8ff;
+  --lavender: #d8ccff;
+  --mint: #99e2b4;
+  --yellow: #ffe599;
+  --peach: #ffbe98;
+  --red: #ff8585;
+  --muted: #66635e;
   --border: 2px solid var(--ink);
   --hard-shadow: 3px 3px 0 var(--ink);
 }
@@ -140,7 +142,7 @@ button {
 }
 
 .icon-btn:hover {
-  background: var(--pink-hover);
+  background: var(--mint);
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0 var(--ink);
 }
@@ -194,7 +196,7 @@ button {
 }
 
 .set-item:hover {
-  background: var(--pink-hover);
+  background: var(--sky);
   transform: translate(-1px, -1px);
   box-shadow: 4px 4px 0 var(--ink);
 }
@@ -205,7 +207,7 @@ button {
 }
 
 .set-item.active {
-  background: var(--pink);
+  background: var(--lavender);
   box-shadow: 4px 4px 0 var(--ink);
   transform: translate(-1px, -1px);
 }
@@ -272,6 +274,14 @@ button {
   padding: 6px 8px;
   font-size: 12px;
   box-shadow: 2px 2px 0 var(--ink);
+}
+
+#btnExport:hover {
+  background: var(--sky);
+}
+
+#btnImport:hover {
+  background: var(--mint);
 }
 
 /* ---------- Buttons ---------- */
@@ -363,7 +373,7 @@ button {
   height: 66px;
   display: grid;
   place-items: center;
-  background: var(--blue);
+  background: var(--lavender);
   border: 3px solid var(--ink);
   box-shadow: 6px 6px 0 var(--ink);
   color: var(--ink);
@@ -412,10 +422,10 @@ button {
 
 #wordCount {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 2px 9px;
   font-size: 12px;
   font-weight: 800;
-  background: var(--surface);
+  background: var(--sky);
   border: var(--border);
   box-shadow: 2px 2px 0 var(--ink);
 }
@@ -426,6 +436,10 @@ button {
   flex: none;
 }
 
+#btnRenameSet:hover {
+  background: var(--lavender);
+}
+
 /* ---------- Word form ---------- */
 
 .word-form {
@@ -434,6 +448,14 @@ button {
   box-shadow: 5px 5px 0 var(--ink);
   padding: 12px 14px;
   margin-bottom: 16px;
+}
+
+#btnSaveWord {
+  background: var(--mint);
+}
+
+#btnSaveWord:hover:not(:disabled) {
+  background: #7cd89f;
 }
 
 .form-head {
@@ -571,7 +593,11 @@ button {
 }
 
 .word-card.selected {
-  background: #fff3ed;
+  background: #f1edff;
+}
+
+.word-card:hover {
+  background: #fffdf5;
 }
 
 .word-left {
@@ -598,7 +624,7 @@ button {
 }
 
 .word-check:checked {
-  background: var(--pink);
+  background: var(--lavender);
 }
 
 .word-check:checked::after {
@@ -643,6 +669,33 @@ button {
   box-shadow: 1.5px 1.5px 0 var(--ink);
   line-height: 1.35;
 }
+
+.word-type[data-type="n"],
+.card-type[data-type="n"] { background: var(--sky); }
+
+.word-type[data-type="v"],
+.card-type[data-type="v"] { background: var(--mint); }
+
+.word-type[data-type="adj"],
+.card-type[data-type="adj"] { background: var(--lavender); }
+
+.word-type[data-type="adv"],
+.card-type[data-type="adv"] { background: var(--yellow); }
+
+.word-type[data-type="prep"],
+.card-type[data-type="prep"] { background: var(--peach); }
+
+.word-type[data-type="conj"],
+.card-type[data-type="conj"] { background: var(--pink-hover); }
+
+.word-type[data-type="pron"],
+.card-type[data-type="pron"] { background: #a8edea; }
+
+.word-type[data-type="interj"],
+.card-type[data-type="interj"] { background: #ffd6a5; }
+
+.word-type[data-type="phrase"],
+.card-type[data-type="phrase"] { background: #caffbf; }
 
 .card-type {
   font-size: 12px;
@@ -741,7 +794,7 @@ button {
 }
 
 .btn-speak {
-  background: var(--yellow);
+  background: var(--sky);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -750,7 +803,7 @@ button {
 }
 
 .btn-speak:hover:not(:disabled) {
-  background: var(--pink);
+  background: var(--yellow);
 }
 
 .study-prompt {
@@ -897,9 +950,13 @@ button {
   font-size: 12px;
   font-weight: 800;
   padding: 4px 10px;
-  background: var(--surface);
+  background: var(--yellow);
   border: var(--border);
   box-shadow: 2px 2px 0 var(--ink);
+}
+
+#btnCheckType {
+  background: var(--mint);
 }
 
 .close-btn {
@@ -1138,7 +1195,7 @@ button {
   padding: 2px 6px;
   font-size: 11px;
   font-weight: 900;
-  background: var(--yellow);
+  background: var(--lavender);
   border: 2px solid var(--ink);
 }
 
