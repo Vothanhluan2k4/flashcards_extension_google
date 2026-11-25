@@ -228,11 +228,26 @@ function renderSets() {
     name.className = 'set-name';
     name.textContent = set.name;
 
+    const right = document.createElement('div');
+    right.className = 'set-item-right';
+
     const count = document.createElement('span');
     count.className = 'set-count';
     count.textContent = set.words.length;
 
-    li.append(name, count);
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'set-del-btn';
+    delBtn.title = `Xóa bộ "${set.name}"`;
+    delBtn.setAttribute('aria-label', `Xóa bộ ${set.name}`);
+    delBtn.innerHTML = '&times;';
+    delBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      deleteSetById(set.id);
+    });
+
+    right.append(count, delBtn);
+    li.append(name, right);
     li.addEventListener('click', () => selectSet(set.id));
     dom.setList.appendChild(li);
   });
@@ -424,6 +439,31 @@ async function renameSet() {
   if (!trimmed) return;
 
   set.name = trimmed.slice(0, 100);
+  await persist();
+  render();
+}
+
+async function deleteSetById(setId) {
+  const set = state.sets.find((s) => s.id === setId);
+  if (!set) return;
+
+  const msg = set.words.length
+    ? `Xóa bộ "${set.name}" và toàn bộ ${set.words.length} từ bên trong?`
+    : `Xóa bộ "${set.name}"?`;
+
+  const ok = await showConfirm(msg, 'Xóa bộ thẻ');
+  if (!ok) return;
+
+  state.sets = state.sets.filter((s) => s.id !== setId);
+
+  if (state.activeSetId === setId) {
+    state.activeSetId = state.sets.length ? state.sets[0].id : null;
+    state.selectedWordIds.clear();
+    resetForm();
+    state.query = '';
+    dom.searchInput.value = '';
+  }
+
   await persist();
   render();
 }

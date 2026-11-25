@@ -213,10 +213,19 @@ button {
 }
 
 .set-name {
+  flex: 1;
+  min-width: 0;
   font-weight: 800;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.set-item-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
 }
 
 .set-count {
@@ -226,6 +235,33 @@ button {
   padding: 1px 7px;
   background: var(--ink);
   color: #fff;
+}
+
+.set-del-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.08s, background 0.08s, transform 0.08s;
+}
+
+.set-item:hover .set-del-btn,
+.set-item:focus-within .set-del-btn,
+.set-item.active .set-del-btn {
+  opacity: 1;
+}
+
+.set-del-btn:hover {
+  background: var(--red);
+  transform: translate(-1px, -1px);
 }
 
 .quick-toggle {
