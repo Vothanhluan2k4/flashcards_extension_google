@@ -19,6 +19,8 @@ const dom = {
 
   syncStatus: el('syncStatus'),
   syncText: el('syncText'),
+  quickCaptureToggle: el('quickCaptureToggle'),
+  quickCaptureBadge: el('quickCaptureBadge'),
 
   emptyState: el('emptyState'),
   btnCreateFirst: el('btnCreateFirst'),
@@ -848,9 +850,23 @@ dom.syncStatus.addEventListener('click', async () => {
   applySyncResult(await Store.sync());
 });
 
+function renderQuickCapture(isEnabled) {
+  dom.quickCaptureToggle.dataset.enabled = isEnabled ? 'true' : 'false';
+  dom.quickCaptureBadge.textContent = isEnabled ? 'BẬT' : 'TẮT';
+}
+
+dom.quickCaptureToggle.addEventListener('click', async () => {
+  const next = dom.quickCaptureToggle.dataset.enabled !== 'true';
+  await chrome.storage.local.set({ quickCaptureEnabled: next });
+  renderQuickCapture(next);
+});
+
 /* ---------- Init ---------- */
 
 async function init() {
+  const qc = await chrome.storage.local.get('quickCaptureEnabled');
+  renderQuickCapture(qc.quickCaptureEnabled !== false);
+
   const local = await Store.getLocal();
   state.sets = local.sets;
   if (state.sets.length) {
