@@ -57,6 +57,7 @@ const dom = {
   wordEmpty: el('wordEmpty'),
 
   studyOverlay: el('studyOverlay'),
+  fxCanvas: el('fxCanvas'),
   studySetName: el('studySetName'),
   studyProgress: el('studyProgress'),
   btnCloseStudy: el('btnCloseStudy'),
@@ -597,7 +598,114 @@ function openStudy() {
   showCard();
 }
 
+let fxRafId = null;
+let fxParticles = [];
+
+function stopFireworks() {
+  if (fxRafId) {
+    cancelAnimationFrame(fxRafId);
+    fxRafId = null;
+  }
+  fxParticles = [];
+  if (dom.fxCanvas) {
+    const ctx = dom.fxCanvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, dom.fxCanvas.width, dom.fxCanvas.height);
+  }
+}
+
+function spawnBurst(cx, cy, count) {
+  const colors = ['#ffd43b', '#ff90e8', '#8ce99a', '#4dabf7', '#ff6b6b', '#ffffff'];
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.35;
+    const speed = 2.6 + Math.random() * 5.2;
+    fxParticles.push({
+      x: cx,
+      y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1.4,
+      size: 5 + Math.random() * 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1,
+      decay: 0.016 + Math.random() * 0.014,
+      rot: Math.random() * Math.PI * 2,
+      vRot: (Math.random() - 0.5) * 0.25,
+      shape: i % 3 === 0 ? 'circle' : 'square',
+    });
+  }
+}
+
+function launchFireworks(targetBox) {
+  const canvas = dom.fxCanvas;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  if (targetBox) {
+    targetBox.classList.remove('celebrate');
+    void targetBox.offsetWidth;
+    targetBox.classList.add('celebrate');
+  }
+
+  const w = canvas.width;
+  const h = canvas.height;
+  spawnBurst(w * 0.25, h * 0.32, 26);
+  spawnBurst(w * 0.75, h * 0.32, 26);
+  setTimeout(() => {
+    if (!dom.studyOverlay.classList.contains('hidden')) {
+      spawnBurst(w * 0.5, h * 0.24, 30);
+    }
+  }, 140);
+
+  if (fxRafId) return;
+
+  const tick = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    fxParticles = fxParticles.filter((p) => p.alpha > 0.02);
+
+    for (const p of fxParticles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.14;
+      p.vx *= 0.985;
+      p.rot += p.vRot;
+      p.alpha -= p.decay;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 1.5;
+
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.strokeRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      }
+      ctx.restore();
+    }
+
+    if (fxParticles.length) {
+      fxRafId = requestAnimationFrame(tick);
+    } else {
+      fxRafId = null;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
+  fxRafId = requestAnimationFrame(tick);
+}
+
 function closeStudy() {
+  stopFireworks();
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
@@ -633,6 +741,9 @@ function showCard() {
 
   const currentMode = getCurrentCardMode();
   state.study.checked = false;
+  stopFireworks();
+  dom.typeBox.classList.remove('celebrate');
+  dom.quizBox.classList.remove('celebrate');
 
   dom.studyProgress.textContent = `${index + 1} / ${cards.length}`;
   dom.btnPrev.disabled = index === 0;
@@ -721,6 +832,7 @@ function handleQuizPick(pickedBtn, isCorrect, correctDef) {
     ? 'Chính xác!'
     : `Chưa đúng! Đáp án: ${correctDef}`;
   dom.quizFeedback.className = `study-feedback ${isCorrect ? 'ok' : 'err'}`;
+  if (isCorrect) launchFireworks(dom.quizBox);
 }
 
 function submitTypeAnswer(event) {
@@ -752,6 +864,7 @@ function submitTypeAnswer(event) {
     ? 'Chính xác!'
     : `Chưa đúng! Đáp án: ${card.term}`;
   dom.typeFeedback.className = `study-feedback ${isCorrect ? 'ok' : 'err'}`;
+  if (isCorrect) launchFireworks(dom.typeBox);
 }
 
 function flipCard() {
