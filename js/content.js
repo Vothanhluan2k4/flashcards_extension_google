@@ -1,8 +1,9 @@
 'use strict';
 
 (() => {
-  if (window.__flashcardsCaptureLoaded) return;
-  window.__flashcardsCaptureLoaded = true;
+  if (typeof window.__flashcardsCaptureCleanup === 'function') {
+    window.__flashcardsCaptureCleanup();
+  }
 
   let enabled = true;
   let host = null;
@@ -13,15 +14,17 @@
   chrome.storage.local.get('quickCaptureEnabled', (data) => {
     if (typeof data.quickCaptureEnabled === 'boolean') {
       enabled = data.quickCaptureEnabled;
-    }
-  });
-
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.quickCaptureEnabled) {
-      enabled = Boolean(changes.quickCaptureEnabled.newValue);
       if (!enabled) removeUI();
     }
   });
+
+  const onStorageChanged = (changes, area) => {
+    if (area === 'local' && changes.quickCaptureEnabled) {
+      enabled = changes.quickCaptureEnabled.newValue !== false;
+      if (!enabled) removeUI();
+    }
+  };
+  chrome.storage.onChanged.addListener(onStorageChanged);
 
   function ensureHost() {
     if (host && document.body.contains(host)) return shadow;
@@ -325,59 +328,87 @@
   }
 
   function handleSelection(clientX, clientY) {
-    if (!enabled) return;
-    const sel = window.getSelection();
-    const text = sel ? sel.toString().trim() : '';
-    if (!text || text.length > 200) {
-      removeUI();
+    if (!chrome.runtime?.id) {
+      cleanup();
       return;
     }
 
-    let rect = null;
-    if (sel.rangeCount) {
-      const r = sel.getRangeAt(0).getBoundingClientRect();
-      if (r && (r.width > 0 || r.height > 0)) {
-        rect = r;
+    chrome.storage.local.get('quickCaptureEnabled', (data) => {
+      if (data.quickCaptureEnabled === false || !enabled) {
+        enabled = data.quickCaptureEnabled !== false;
+        removeUI();
+        return;
       }
-    }
 
-    if (!rect) {
-      rect = {
-        left: clientX,
-        right: clientX,
-        top: clientY,
-        bottom: clientY,
-        width: 1,
-        height: 1,
-      };
-    }
+      const sel = window.getSelection();
+      const text = sel ? sel.toString().trim() : '';
+      if (!text || text.length > 200) {
+        removeUI();
+        return;
+      }
 
-    selectedText = text;
-    lastSelectionRect = rect;
-    showFab(lastSelectionRect, selectedText);
+      let rect = null;
+      if (sel.rangeCount) {
+        const r = sel.getRangeAt(0).getBoundingClientRect();
+        if (r && (r.width > 0 || r.height > 0)) {
+          rect = r;
+        }
+      }
+
+      if (!rect) {
+        rect = {
+          left: clientX,
+          right: clientX,
+          top: clientY,
+          bottom: clientY,
+          width: 1,
+          height: 1,
+        };
+      }
+
+      selectedText = text;
+      lastSelectionRect = rect;
+      showFab(lastSelectionRect, selectedText);
+    });
   }
 
-  document.addEventListener(
-    'mouseup',
-    (event) => {
-      if (!enabled) return;
-      if (host && event.composedPath().includes(host)) return;
-      const { clientX, clientY } = event;
-      setTimeout(() => handleSelection(clientX, clientY), 15);
-    },
-    true
-  );
+  const onMouseUp = (event) => {
+    if (!chrome.runtime?.id) {
+      cleanup();
+      return;
+    }
+    if (!enabled) return;
+    if (host && event.composedPath().includes(host)) return;
+    const { clientX, clientY } = event;
+    setTimeout(() => handleSelection(clientX, clientY), 15);
+  };
 
-  document.addEventListener(
-    'mousedown',
-    (event) => {
-      if (host && event.composedPath().includes(host)) return;
-      removeUI();
-    },
-    true
-  );
+  const onMouseDown = (event) => {
+    if (host && event.composedPath().includes(host)) return;
+    removeUI();
+  };
 
-  document.addEventListener('keydown', (event) => {
+  const onKeyDown = (event) => {
     if (event.key === 'Escape') removeUI();
-  });
+  };
+
+  function cleanup() {
+    document.removeEventListener('mouseup', onMouseUp, true);
+    document.removeEventListener('mousedown', onMouseDown, true);
+    document.removeEventListener('keydown', onKeyDown);
+    if (chrome.runtime?.id) {
+      chrome.storage.onChanged.removeListener(onStorageChanged);
+    }
+    if (host && host.parentNode) {
+      host.remove();
+    }
+    host = null;
+    shadow = null;
+  }
+
+  window.__flashcardsCaptureCleanup = cleanup;
+
+  document.addEventListener('mouseup', onMouseUp, true);
+  document.addEventListener('mousedown', onMouseDown, true);
+  document.addEventListener('keydown', onKeyDown);
 })();
