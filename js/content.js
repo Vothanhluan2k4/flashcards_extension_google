@@ -324,33 +324,58 @@
     defInput.focus();
   }
 
-  document.addEventListener('mouseup', (event) => {
+  function handleSelection(clientX, clientY) {
     if (!enabled) return;
-    if (host && event.composedPath().includes(host)) return;
+    const sel = window.getSelection();
+    const text = sel ? sel.toString().trim() : '';
+    if (!text || text.length > 200) {
+      removeUI();
+      return;
+    }
 
-    setTimeout(() => {
-      const sel = window.getSelection();
-      const text = sel ? sel.toString().trim() : '';
-      if (!text || text.length > 200) {
-        removeUI();
-        return;
+    let rect = null;
+    if (sel.rangeCount) {
+      const r = sel.getRangeAt(0).getBoundingClientRect();
+      if (r && (r.width > 0 || r.height > 0)) {
+        rect = r;
       }
-      if (!sel.rangeCount) return;
-      const rect = sel.getRangeAt(0).getBoundingClientRect();
-      if (!rect || (rect.width === 0 && rect.height === 0)) {
-        removeUI();
-        return;
-      }
-      selectedText = text;
-      lastSelectionRect = rect;
-      showFab(lastSelectionRect, selectedText);
-    }, 10);
-  });
+    }
 
-  document.addEventListener('mousedown', (event) => {
-    if (host && event.composedPath().includes(host)) return;
-    removeUI();
-  });
+    if (!rect) {
+      rect = {
+        left: clientX,
+        right: clientX,
+        top: clientY,
+        bottom: clientY,
+        width: 1,
+        height: 1,
+      };
+    }
+
+    selectedText = text;
+    lastSelectionRect = rect;
+    showFab(lastSelectionRect, selectedText);
+  }
+
+  document.addEventListener(
+    'mouseup',
+    (event) => {
+      if (!enabled) return;
+      if (host && event.composedPath().includes(host)) return;
+      const { clientX, clientY } = event;
+      setTimeout(() => handleSelection(clientX, clientY), 15);
+    },
+    true
+  );
+
+  document.addEventListener(
+    'mousedown',
+    (event) => {
+      if (host && event.composedPath().includes(host)) return;
+      removeUI();
+    },
+    true
+  );
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') removeUI();

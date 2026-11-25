@@ -8,6 +8,18 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (typeof data.quickCaptureEnabled !== 'boolean') {
     await chrome.storage.local.set({ quickCaptureEnabled: true });
   }
+
+  try {
+    const tabs = await chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] });
+    for (const tab of tabs) {
+      if (!tab.id) continue;
+      chrome.scripting
+        .executeScript({ target: { tabId: tab.id }, files: ['js/content.js'] })
+        .catch(() => {});
+    }
+  } catch {
+    // ignore if tabs cannot be queried
+  }
 });
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
