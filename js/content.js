@@ -63,10 +63,10 @@
         align-items: center;
         gap: 6px;
         padding: 6px 11px;
-        background: #ffd43b;
-        color: #111111;
-        border: 2px solid #111111;
-        box-shadow: 3px 3px 0 #111111;
+        background: #f2e4c6;
+        color: #1e1e24;
+        border: 2px solid #1e1e24;
+        box-shadow: 3px 3px 0 #1e1e24;
         font-size: 12px;
         font-weight: 900;
         cursor: pointer;
@@ -74,17 +74,17 @@
         transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
       }
       .fc-fab:hover {
-        background: #ff90e8;
+        background: #ffa686;
         transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 #111111;
+        box-shadow: 4px 4px 0 #1e1e24;
       }
       .fc-fab-logo {
         display: inline-grid;
         place-items: center;
         width: 18px;
         height: 18px;
-        background: #ff90e8;
-        border: 1.5px solid #111111;
+        background: #ffa686;
+        border: 1.5px solid #1e1e24;
         font-size: 11px;
         font-weight: 900;
       }
@@ -92,10 +92,10 @@
         position: fixed;
         pointer-events: auto;
         width: 310px;
-        background: #fff7e8;
-        color: #111111;
-        border: 3px solid #111111;
-        box-shadow: 6px 6px 0 #111111;
+        background: #faf7f2;
+        color: #1e1e24;
+        border: 3px solid #1e1e24;
+        box-shadow: 6px 6px 0 #1e1e24;
         padding: 16px 18px 18px;
         display: flex;
         flex-direction: column;
@@ -116,30 +116,30 @@
       .fc-close {
         width: 24px;
         height: 24px;
-        border: 2px solid #111111;
+        border: 2px solid #1e1e24;
         background: #ffffff;
-        box-shadow: 2px 2px 0 #111111;
+        box-shadow: 2px 2px 0 #1e1e24;
         font-size: 16px;
         font-weight: 900;
         line-height: 1;
         cursor: pointer;
         display: grid;
         place-items: center;
-        color: #111111;
+        color: #1e1e24;
       }
-      .fc-close:hover { background: #ff90e8; }
+      .fc-close:hover { background: #ffd1bf; }
       .fc-field {
         width: 100%;
         padding: 10px 12px;
-        border: 2px solid #111111;
+        border: 2px solid #1e1e24;
         background: #ffffff;
-        color: #111111;
+        color: #1e1e24;
         font-size: 13.5px;
         font-weight: 600;
         outline: none;
       }
       .fc-field:focus {
-        box-shadow: 2.5px 2.5px 0 #111111;
+        box-shadow: 2.5px 2.5px 0 #1e1e24;
       }
       .fc-row {
         display: grid;
@@ -153,26 +153,26 @@
         margin-top: 2px;
       }
       .fc-btn {
-        border: 2px solid #111111;
+        border: 2px solid #1e1e24;
         padding: 7px 12px;
         font-size: 12px;
         font-weight: 800;
         background: #ffffff;
-        color: #111111;
-        box-shadow: 2px 2px 0 #111111;
+        color: #1e1e24;
+        box-shadow: 2px 2px 0 #1e1e24;
         cursor: pointer;
       }
       .fc-btn-primary {
-        background: #ff90e8;
+        background: #ffa686;
       }
       .fc-btn:hover {
         transform: translate(-1px, -1px);
-        box-shadow: 3px 3px 0 #111111;
+        box-shadow: 3px 3px 0 #1e1e24;
       }
       .fc-status {
         font-size: 12px;
         font-weight: 800;
-        color: #0b7a3e;
+        color: #216e4e;
       }
     `;
     shadow.appendChild(style);

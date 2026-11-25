@@ -614,7 +614,7 @@ function stopFireworks() {
 }
 
 function spawnBurst(cx, cy, count) {
-  const colors = ['#ffd43b', '#ff90e8', '#8ce99a', '#4dabf7', '#ff6b6b', '#ffffff'];
+  const colors = ['#fde68a', '#ffa686', '#aee5be', '#a5c8e4', '#f79489', '#ffffff'];
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.35;
     const speed = 2.6 + Math.random() * 5.2;
