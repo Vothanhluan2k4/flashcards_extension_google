@@ -571,21 +571,20 @@ function buildCardModes(count, mode) {
   );
 }
 
-function updateModeButtons() {
+function updateModeButtons(activeMode) {
   document.querySelectorAll('.mode-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.mode === state.study.mode);
+    btn.classList.toggle('active', btn.dataset.mode === activeMode);
   });
 }
 
 function setStudyMode(mode) {
   if (!state.study.cards.length) return;
   state.study.mode = mode;
-  state.study.cards = mode === 'random' ? shuffleArray(state.study.allWords) : state.study.allWords.slice();
+  state.study.cards = state.study.allWords.slice();
   state.study.cardModes = buildCardModes(state.study.cards.length, mode);
   state.study.index = 0;
   state.study.answered = 0;
   state.study.correct = 0;
-  updateModeButtons();
   showCard();
 }
 
@@ -598,19 +597,17 @@ function openStudy() {
     return;
   }
 
-  const mode = state.study.mode || 'flip';
   state.study = {
-    cards: mode === 'random' ? shuffleArray(set.words) : set.words.slice(),
+    cards: shuffleArray(set.words),
     allWords: set.words.slice(),
     index: 0,
-    mode,
-    cardModes: buildCardModes(set.words.length, mode),
+    mode: 'random',
+    cardModes: buildCardModes(set.words.length, 'random'),
     answered: 0,
     correct: 0,
     checked: false,
   };
   dom.studySetName.textContent = set.name;
-  updateModeButtons();
   dom.studyOverlay.classList.remove('hidden');
   showCard();
 }
@@ -631,6 +628,7 @@ function showCard() {
 
   const currentMode = getCurrentCardMode();
   state.study.checked = false;
+  updateModeButtons(currentMode);
 
   dom.studyProgress.textContent = `${index + 1} / ${cards.length}`;
   dom.btnPrev.disabled = index === 0;
