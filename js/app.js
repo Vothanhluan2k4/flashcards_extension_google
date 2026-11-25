@@ -69,6 +69,7 @@ const dom = {
   dialogConfirm: el('dialogConfirm'),
 
   exportOverlay: el('exportOverlay'),
+  exportDesc: el('exportDesc'),
   exportClose: el('exportClose'),
   btnExportJson: el('btnExportJson'),
   btnExportExcel: el('btnExportExcel'),
@@ -590,11 +591,30 @@ function prevCard() {
 
 /* ---------- Export / Import ---------- */
 
-function openExportModal() {
-  if (!state.sets.length) {
-    showAlert('Chưa có dữ liệu để xuất.');
-    return;
+function safeFileName(name) {
+  return String(name || 'flashcards')
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'flashcards';
+}
+
+function getExportTarget() {
+  const set = getActiveSet();
+  if (!set) {
+    showAlert(
+      state.sets.length ? 'Vui lòng chọn một bộ thẻ để xuất.' : 'Chưa có dữ liệu để xuất.'
+    );
+    return null;
   }
+  return set;
+}
+
+function openExportModal() {
+  const set = getExportTarget();
+  if (!set) return;
+  dom.exportDesc.textContent = `Xuất bộ thẻ "${set.name}" (${set.words.length} từ) sang:`;
   dom.exportOverlay.classList.remove('hidden');
 }
 
@@ -604,16 +624,14 @@ function closeExportModal() {
 
 function exportJson() {
   closeExportModal();
-  if (!state.sets.length) {
-    showAlert('Chưa có dữ liệu để xuất.');
-    return;
-  }
+  const set = getExportTarget();
+  if (!set) return;
 
   const payload = {
     app: 'flashcards',
     version: 1,
     exportedAt: new Date().toISOString(),
-    sets: state.sets,
+    sets: [set],
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -624,7 +642,7 @@ function exportJson() {
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = `flashcards-${date}.json`;
+  a.download = `${safeFileName(set.name)}-${date}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -633,35 +651,28 @@ function exportJson() {
 
 function exportExcel() {
   closeExportModal();
-  if (!state.sets.length) {
-    showAlert('Chưa có dữ liệu để xuất.');
-    return;
-  }
+  const set = getExportTarget();
+  if (!set) return;
   if (typeof XLSX === 'undefined') {
     showAlert('Không tìm thấy thư viện Excel.', 'Lỗi');
     return;
   }
 
-  const rows = [];
-  state.sets.forEach((set) => {
-    if (!set.words.length) {
-      rows.push({
-        'Bộ thẻ': set.name,
-        'Từ / Cụm từ': '',
-        'Loại từ': '',
-        'Nghĩa / Định nghĩa': '',
-      });
-      return;
-    }
-    set.words.forEach((w) => {
-      rows.push({
+  const rows = set.words.length
+    ? set.words.map((w) => ({
         'Bộ thẻ': set.name,
         'Từ / Cụm từ': w.term || '',
         'Loại từ': w.wordType || '',
         'Nghĩa / Định nghĩa': w.definition || '',
-      });
-    });
-  });
+      }))
+    : [
+        {
+          'Bộ thẻ': set.name,
+          'Từ / Cụm từ': '',
+          'Loại từ': '',
+          'Nghĩa / Định nghĩa': '',
+        },
+      ];
 
   const ws = XLSX.utils.json_to_sheet(rows);
   ws['!cols'] = [{ wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 40 }];
@@ -669,20 +680,18 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Flashcards');
 
   const date = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `flashcards-${date}.xlsx`);
+  XLSX.writeFile(wb, `${safeFileName(set.name)}-${date}.xlsx`);
 }
 
 async function exportPdf() {
   closeExportModal();
-  if (!state.sets.length) {
-    showAlert('Chưa có dữ liệu để xuất.');
-    return;
-  }
+  const set = getExportTarget();
+  if (!set) return;
 
   await chrome.storage.local.set({
     printPayload: {
       exportedAt: new Date().toISOString(),
-      sets: state.sets,
+      sets: [set],
     },
   });
 
