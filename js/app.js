@@ -51,7 +51,101 @@ const dom = {
   btnPrev: el('btnPrev'),
   btnFlip: el('btnFlip'),
   btnNext: el('btnNext'),
+
+  dialogOverlay: el('dialogOverlay'),
+  dialogBox: el('dialogBox'),
+  dialogTitle: el('dialogTitle'),
+  dialogClose: el('dialogClose'),
+  dialogMessage: el('dialogMessage'),
+  dialogInput: el('dialogInput'),
+  dialogCancel: el('dialogCancel'),
+  dialogConfirm: el('dialogConfirm'),
 };
+
+let activeDialogResolve = null;
+
+function closeDialog(value) {
+  if (!activeDialogResolve) return;
+  const resolve = activeDialogResolve;
+  activeDialogResolve = null;
+  dom.dialogOverlay.classList.add('hidden');
+  resolve(value);
+}
+
+function showDialog({
+  mode = 'alert',
+  title = 'Thông báo',
+  message = '',
+  defaultValue = '',
+  placeholder = '',
+  confirmText = 'OK',
+  cancelText = 'Hủy',
+  danger = false,
+}) {
+  if (activeDialogResolve) {
+    closeDialog(mode === 'prompt' ? null : false);
+  }
+
+  dom.dialogTitle.textContent = title;
+  dom.dialogMessage.textContent = message;
+  dom.dialogMessage.classList.toggle('hidden', !message);
+
+  const isPrompt = mode === 'prompt';
+  const isAlert = mode === 'alert';
+
+  dom.dialogInput.classList.toggle('hidden', !isPrompt);
+  dom.dialogInput.value = defaultValue;
+  dom.dialogInput.placeholder = placeholder;
+
+  dom.dialogCancel.classList.toggle('hidden', isAlert);
+  dom.dialogCancel.textContent = cancelText;
+
+  dom.dialogConfirm.textContent = confirmText;
+  dom.dialogConfirm.className = `btn btn-sm ${danger ? 'btn-danger' : 'btn-primary'}`;
+
+  dom.dialogOverlay.classList.remove('hidden');
+
+  return new Promise((resolve) => {
+    activeDialogResolve = resolve;
+    requestAnimationFrame(() => {
+      if (isPrompt) {
+        dom.dialogInput.focus();
+        dom.dialogInput.select();
+      } else {
+        dom.dialogConfirm.focus();
+      }
+    });
+  });
+}
+
+function showPrompt(title, defaultValue = '', placeholder = '', confirmText = 'OK') {
+  return showDialog({
+    mode: 'prompt',
+    title,
+    defaultValue,
+    placeholder,
+    confirmText,
+  });
+}
+
+function showConfirm(message, title = 'Xác nhận', confirmText = 'Xóa', danger = true) {
+  return showDialog({
+    mode: 'confirm',
+    title,
+    message,
+    confirmText,
+    danger,
+  });
+}
+
+function showAlert(message, title = 'Thông báo') {
+  return showDialog({
+    mode: 'alert',
+    title,
+    message,
+    confirmText: 'Đóng',
+  });
+}
 
 function uid() {
   return crypto.randomUUID();
@@ -192,7 +286,7 @@ function renderWords(set) {
 /* ---------- Sets ---------- */
 
 async function createSet() {
-  const name = prompt('Tên bộ thẻ mới:');
+  const name = await showPrompt('Tên bộ thẻ mới', '', 'Nhập tên bộ thẻ...', 'Tạo');
   if (name === null) return;
 
   const trimmed = name.trim();
@@ -227,7 +321,7 @@ async function renameSet() {
   const set = getActiveSet();
   if (!set) return;
 
-  const name = prompt('Đổi tên bộ thẻ:', set.name);
+  const name = await showPrompt('Đổi tên bộ thẻ', set.name, 'Nhập tên bộ thẻ...', 'Lưu');
   if (name === null) return;
 
   const trimmed = name.trim();
@@ -242,7 +336,7 @@ async function deleteSet() {
   const set = getActiveSet();
   if (!set) return;
 
-  const ok = confirm(`Xóa bộ "${set.name}" và ${set.words.length} từ bên trong?`);
+  const ok = await showConfirm(`Xóa bộ "${set.name}" và ${set.words.length} từ bên trong?`, 'Xóa bộ thẻ');
   if (!ok) return;
 
   state.sets = state.sets.filter((s) => s.id !== set.id);
@@ -288,7 +382,7 @@ async function deleteWord(wordId) {
   const word = set.words.find((w) => w.id === wordId);
   if (!word) return;
 
-  const ok = confirm(`Xóa từ "${word.term}"?`);
+  const ok = await showConfirm(`Xóa từ "${word.term}"?`, 'Xóa từ');
   if (!ok) return;
 
   set.words = set.words.filter((w) => w.id !== wordId);
@@ -342,7 +436,7 @@ function openStudy() {
   if (!set) return;
 
   if (!set.words.length) {
-    alert('Bộ thẻ chưa có từ nào để học.');
+    showAlert('Bộ thẻ chưa có từ nào để học.');
     return;
   }
 
@@ -374,13 +468,13 @@ function flipCard() {
   dom.flashcard.classList.toggle('flipped');
 }
 
-function nextCard() {
+async function nextCard() {
   const { cards, index } = state.study;
   if (index < cards.length - 1) {
     state.study.index += 1;
     showCard();
   } else {
-    alert('Bạn đã học hết bộ thẻ.');
+    await showAlert('Bạn đã học hết bộ thẻ.', 'Hoàn thành');
     closeStudy();
   }
 }
@@ -396,7 +490,7 @@ function prevCard() {
 
 function exportJson() {
   if (!state.sets.length) {
-    alert('Chưa có dữ liệu để xuất.');
+    showAlert('Chưa có dữ liệu để xuất.');
     return;
   }
 
@@ -458,9 +552,9 @@ async function importJson(event) {
 
     await persist();
     render();
-    alert(`Đã nhập ${imported.length} bộ thẻ.`);
+    await showAlert(`Đã nhập ${imported.length} bộ thẻ.`, 'Nhập thành công');
   } catch (err) {
-    alert('File JSON không hợp lệ.');
+    await showAlert('File JSON không hợp lệ.', 'Lỗi');
   }
 }
 
@@ -487,7 +581,34 @@ dom.btnFlip.addEventListener('click', flipCard);
 dom.btnNext.addEventListener('click', nextCard);
 dom.btnPrev.addEventListener('click', prevCard);
 
+dom.dialogBox.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const isPrompt = !dom.dialogInput.classList.contains('hidden');
+  closeDialog(isPrompt ? dom.dialogInput.value : true);
+});
+
+const cancelActiveDialog = () => {
+  const isPrompt = !dom.dialogInput.classList.contains('hidden');
+  closeDialog(isPrompt ? null : false);
+};
+
+dom.dialogCancel.addEventListener('click', cancelActiveDialog);
+dom.dialogClose.addEventListener('click', cancelActiveDialog);
+dom.dialogOverlay.addEventListener('click', (event) => {
+  if (event.target === dom.dialogOverlay) {
+    cancelActiveDialog();
+  }
+});
+
 document.addEventListener('keydown', (event) => {
+  if (!dom.dialogOverlay.classList.contains('hidden')) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelActiveDialog();
+    }
+    return;
+  }
+
   if (dom.studyOverlay.classList.contains('hidden')) return;
 
   if (event.key === 'ArrowRight') {
