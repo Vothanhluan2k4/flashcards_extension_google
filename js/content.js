@@ -91,15 +91,15 @@
       .fc-card {
         position: fixed;
         pointer-events: auto;
-        width: 300px;
+        width: 310px;
         background: #fff7e8;
         color: #111111;
         border: 3px solid #111111;
         box-shadow: 6px 6px 0 #111111;
-        padding: 12px 14px 14px;
+        padding: 16px 18px 18px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
       }
       .fc-head {
         display: flex;
@@ -130,11 +130,11 @@
       .fc-close:hover { background: #ff90e8; }
       .fc-field {
         width: 100%;
-        padding: 7px 9px;
+        padding: 10px 12px;
         border: 2px solid #111111;
         background: #ffffff;
         color: #111111;
-        font-size: 13px;
+        font-size: 13.5px;
         font-weight: 600;
         outline: none;
       }
@@ -143,8 +143,8 @@
       }
       .fc-row {
         display: grid;
-        grid-template-columns: 110px 1fr;
-        gap: 7px;
+        grid-template-columns: 118px 1fr;
+        gap: 8px;
       }
       .fc-actions {
         display: flex;
@@ -233,7 +233,7 @@
 
     const card = document.createElement('form');
     card.className = 'fc-card';
-    const { x, y } = clampPosition(rect.left, rect.bottom + 8, 300, 240);
+    const { x, y } = clampPosition(rect.left, rect.bottom + 8, 310, 260);
     card.style.left = `${x}px`;
     card.style.top = `${y}px`;
 
