@@ -565,27 +565,10 @@ function shuffleArray(arr) {
   return copy;
 }
 
-function buildCardModes(count, mode) {
+function buildCardModes(count) {
   return Array.from({ length: count }, () =>
-    mode === 'random' ? BASE_MODES[Math.floor(Math.random() * BASE_MODES.length)] : mode
+    BASE_MODES[Math.floor(Math.random() * BASE_MODES.length)]
   );
-}
-
-function updateModeButtons(activeMode) {
-  document.querySelectorAll('.mode-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.mode === activeMode);
-  });
-}
-
-function setStudyMode(mode) {
-  if (!state.study.cards.length) return;
-  state.study.mode = mode;
-  state.study.cards = state.study.allWords.slice();
-  state.study.cardModes = buildCardModes(state.study.cards.length, mode);
-  state.study.index = 0;
-  state.study.answered = 0;
-  state.study.correct = 0;
-  showCard();
 }
 
 function openStudy() {
@@ -601,8 +584,7 @@ function openStudy() {
     cards: shuffleArray(set.words),
     allWords: set.words.slice(),
     index: 0,
-    mode: 'random',
-    cardModes: buildCardModes(set.words.length, 'random'),
+    cardModes: buildCardModes(set.words.length),
     answered: 0,
     correct: 0,
     checked: false,
@@ -628,7 +610,6 @@ function showCard() {
 
   const currentMode = getCurrentCardMode();
   state.study.checked = false;
-  updateModeButtons(currentMode);
 
   dom.studyProgress.textContent = `${index + 1} / ${cards.length}`;
   dom.btnPrev.disabled = index === 0;
@@ -1039,9 +1020,6 @@ dom.btnFlip.addEventListener('click', flipCard);
 dom.btnNext.addEventListener('click', nextCard);
 dom.btnPrev.addEventListener('click', prevCard);
 dom.typeForm.addEventListener('submit', submitTypeAnswer);
-document.querySelectorAll('.mode-btn').forEach((btn) => {
-  btn.addEventListener('click', () => setStudyMode(btn.dataset.mode));
-});
 
 dom.dialogBox.addEventListener('submit', (event) => {
   event.preventDefault();
