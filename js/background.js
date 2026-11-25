@@ -1,7 +1,7 @@
 'use strict';
 
-const API_BASE = 'http://localhost:3000';
-const TIMEOUT_MS = 6000;
+const API_BASE = 'https://flashcards-extension-google.onrender.com';
+const TIMEOUT_MS = 20000;
 
 chrome.runtime.onInstalled.addListener(async () => {
   const data = await chrome.storage.local.get('quickCaptureEnabled');

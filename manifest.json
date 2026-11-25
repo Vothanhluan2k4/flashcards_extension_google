@@ -20,7 +20,7 @@
     }
   },
   "permissions": ["storage", "scripting"],
-  "host_permissions": ["http://localhost:3000/*", "http://*/*", "https://*/*"],
+  "host_permissions": ["https://flashcards-extension-google.onrender.com/*", "http://*/*", "https://*/*"],
   "background": {
     "service_worker": "js/background.js"
   },
