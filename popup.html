@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcards</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-logo">F</span>
+        <div>
+          <h1>Flashcards</h1>
+          <p class="brand-sub">Học từ vựng mỗi ngày</p>
+        </div>
+      </div>
+
+      <div class="sidebar-toolbar">
+        <span>Bộ thẻ</span>
+        <button id="btnAddSet" class="icon-btn" title="Tạo bộ thẻ mới" type="button">+</button>
+      </div>
+
+      <ul id="setList" class="set-list"></ul>
+
+      <div id="syncStatus" class="sync-status" data-state="pending" title="Nhấn để đồng bộ lại">
+        <span class="sync-dot"></span>
+        <span id="syncText">Đang kết nối...</span>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="btnExport" class="btn btn-ghost btn-sm" type="button">Xuất JSON</button>
+        <button id="btnImport" class="btn btn-ghost btn-sm" type="button">Nhập JSON</button>
+        <input type="file" id="fileImport" accept="application/json,.json" hidden>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="emptyState" class="empty-state">
+        <div class="empty-icon">F</div>
+        <h2>Chưa có bộ thẻ nào</h2>
+        <p>Tạo bộ thẻ đầu tiên để bắt đầu lưu và học từ vựng.</p>
+        <button id="btnCreateFirst" class="btn btn-primary" type="button">Tạo bộ thẻ</button>
+      </section>
+
+      <section id="setView" class="set-view hidden">
+        <header class="set-header">
+          <div class="set-title">
+            <h2 id="setName"></h2>
+            <span id="wordCount" class="muted"></span>
+          </div>
+          <div class="set-actions">
+            <button id="btnRenameSet" class="btn btn-ghost btn-sm" type="button">Đổi tên</button>
+            <button id="btnDeleteSet" class="btn btn-ghost btn-sm danger" type="button">Xóa bộ</button>
+            <button id="btnStudy" class="btn btn-primary" type="button">Học ngay</button>
+          </div>
+        </header>
+
+        <form id="wordForm" class="word-form" autocomplete="off">
+          <div class="form-head">
+            <h3 id="formTitle">Thêm từ mới</h3>
+            <button type="button" id="btnCancelEdit" class="btn btn-ghost btn-xs hidden">Hủy sửa</button>
+          </div>
+          <div class="form-grid">
+            <input id="inputTerm" type="text" placeholder="Từ / cụm từ" maxlength="200">
+            <input id="inputDef" type="text" placeholder="Nghĩa / định nghĩa" maxlength="500">
+            <button id="btnSaveWord" class="btn btn-primary" type="submit">Thêm</button>
+          </div>
+        </form>
+
+        <div class="list-head">
+          <span id="listLabel">Danh sách từ</span>
+          <input id="searchInput" type="search" placeholder="Tìm từ..." autocomplete="off">
+        </div>
+
+        <ul id="wordList" class="word-list"></ul>
+        <p id="wordEmpty" class="word-empty hidden"></p>
+      </section>
+    </main>
+  </div>
+
+  <div id="studyOverlay" class="overlay hidden">
+    <header class="study-header">
+      <div>
+        <p class="study-label">Đang học</p>
+        <h3 id="studySetName"></h3>
+      </div>
+      <div class="study-header-right">
+        <span id="studyProgress" class="study-progress"></span>
+        <button id="btnCloseStudy" class="close-btn" title="Thoát" type="button">&times;</button>
+      </div>
+    </header>
+
+    <div id="flashcard" class="flashcard">
+      <div class="flashcard-inner">
+        <div class="face face-front">
+          <span id="cardTerm" class="card-term"></span>
+          <span class="card-hint">Nhấn để xem nghĩa</span>
+        </div>
+        <div class="face face-back">
+          <span id="cardDef" class="card-def"></span>
+          <span class="card-hint">Nhấn để lật lại</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="study-controls">
+      <button id="btnPrev" class="btn btn-light" type="button">Trước</button>
+      <button id="btnFlip" class="btn btn-accent" type="button">Lật thẻ</button>
+      <button id="btnNext" class="btn btn-light" type="button">Tiếp</button>
+    </div>
+
+    <p class="study-tip">Mẹo: dùng phím &larr; &rarr; để chuyển thẻ, Space để lật</p>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

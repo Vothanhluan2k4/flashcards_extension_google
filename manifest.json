@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Flashcards - Học từ vựng",
+  "version": "1.0.0",
+  "description": "Tạo, lưu và học các bộ thẻ từ vựng ngay trên trình duyệt. Dữ liệu lưu cục bộ bằng chrome.storage.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Flashcards"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:3000/*"]
+}
