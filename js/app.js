@@ -28,7 +28,6 @@ const dom = {
   setName: el('setName'),
   wordCount: el('wordCount'),
   btnRenameSet: el('btnRenameSet'),
-  btnDeleteSet: el('btnDeleteSet'),
   btnStudy: el('btnStudy'),
 
   wordForm: el('wordForm'),
@@ -397,23 +396,6 @@ async function renameSet() {
   if (!trimmed) return;
 
   set.name = trimmed.slice(0, 100);
-  await persist();
-  render();
-}
-
-async function deleteSet() {
-  const set = getActiveSet();
-  if (!set) return;
-
-  const ok = await showConfirm(`Xóa bộ "${set.name}" và ${set.words.length} từ bên trong?`, 'Xóa bộ thẻ');
-  if (!ok) return;
-
-  state.sets = state.sets.filter((s) => s.id !== set.id);
-  state.activeSetId = state.sets.length ? state.sets[0].id : null;
-  resetForm();
-  state.query = '';
-  dom.searchInput.value = '';
-
   await persist();
   render();
 }
@@ -842,7 +824,6 @@ async function importFile(event) {
 dom.btnAddSet.addEventListener('click', createSet);
 dom.btnCreateFirst.addEventListener('click', createSet);
 dom.btnRenameSet.addEventListener('click', renameSet);
-dom.btnDeleteSet.addEventListener('click', deleteSet);
 
 dom.wordForm.addEventListener('submit', submitWord);
 dom.btnCancelEdit.addEventListener('click', resetForm);
