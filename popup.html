@@ -121,6 +121,7 @@
           <div class="face face-front">
             <span id="cardType" class="card-type hidden"></span>
             <span id="cardTerm" class="card-term"></span>
+            <button id="btnSpeakFlip" class="btn btn-xs btn-speak" type="button" title="Nghe phát âm (phím S)">&#128266; Nghe</button>
             <span class="card-hint">Nhấn để xem nghĩa</span>
           </div>
           <div class="face face-back">
@@ -131,7 +132,10 @@
       </div>
 
       <div id="typeBox" class="study-card hidden">
-        <span class="study-mode-tag">Gõ từ tiếng Anh / từ vựng</span>
+        <div class="study-card-top">
+          <span class="study-mode-tag">Gõ từ tiếng Anh / từ vựng</span>
+          <button id="btnSpeakType" class="btn btn-xs btn-speak" type="button" title="Nghe phát âm">&#128266; Nghe</button>
+        </div>
         <span id="typeWordType" class="card-type hidden"></span>
         <p id="typePrompt" class="study-prompt"></p>
         <form id="typeForm" class="type-form" autocomplete="off">
@@ -142,7 +146,10 @@
       </div>
 
       <div id="quizBox" class="study-card hidden">
-        <span class="study-mode-tag">Chọn đáp án đúng</span>
+        <div class="study-card-top">
+          <span class="study-mode-tag">Chọn đáp án đúng</span>
+          <button id="btnSpeakQuiz" class="btn btn-xs btn-speak" type="button" title="Nghe phát âm (phím S)">&#128266; Nghe</button>
+        </div>
         <div class="quiz-prompt-row">
           <span id="quizWordType" class="card-type hidden"></span>
           <p id="quizPrompt" class="study-prompt"></p>

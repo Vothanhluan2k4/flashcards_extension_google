@@ -64,7 +64,9 @@ const dom = {
   cardType: el('cardType'),
   cardTerm: el('cardTerm'),
   cardDef: el('cardDef'),
+  btnSpeakFlip: el('btnSpeakFlip'),
   typeBox: el('typeBox'),
+  btnSpeakType: el('btnSpeakType'),
   typeWordType: el('typeWordType'),
   typePrompt: el('typePrompt'),
   typeForm: el('typeForm'),
@@ -72,6 +74,7 @@ const dom = {
   btnCheckType: el('btnCheckType'),
   typeFeedback: el('typeFeedback'),
   quizBox: el('quizBox'),
+  btnSpeakQuiz: el('btnSpeakQuiz'),
   quizWordType: el('quizWordType'),
   quizPrompt: el('quizPrompt'),
   quizOptions: el('quizOptions'),
@@ -595,8 +598,28 @@ function openStudy() {
 }
 
 function closeStudy() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
   dom.studyOverlay.classList.add('hidden');
   dom.flashcard.classList.remove('flipped');
+}
+
+function speakWord(text) {
+  const clean = String(text || '').trim();
+  if (!clean || !('speechSynthesis' in window)) return;
+
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(clean);
+  const hasVi = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(clean);
+  utter.lang = hasVi ? 'vi-VN' : 'en-US';
+  utter.rate = 0.95;
+  window.speechSynthesis.speak(utter);
+}
+
+function speakCurrentCard() {
+  const card = state.study.cards[state.study.index];
+  if (card) speakWord(card.term);
 }
 
 function getCurrentCardMode() {
@@ -1016,6 +1039,12 @@ dom.btnDeleteSelected.addEventListener('click', deleteSelectedWords);
 dom.btnStudy.addEventListener('click', openStudy);
 dom.btnCloseStudy.addEventListener('click', closeStudy);
 dom.flashcard.addEventListener('click', flipCard);
+dom.btnSpeakFlip.addEventListener('click', (event) => {
+  event.stopPropagation();
+  speakCurrentCard();
+});
+dom.btnSpeakType.addEventListener('click', speakCurrentCard);
+dom.btnSpeakQuiz.addEventListener('click', speakCurrentCard);
 dom.btnFlip.addEventListener('click', flipCard);
 dom.btnNext.addEventListener('click', nextCard);
 dom.btnPrev.addEventListener('click', prevCard);
@@ -1076,6 +1105,9 @@ document.addEventListener('keydown', (event) => {
   } else if (event.key === ' ' && currentMode === 'flip') {
     event.preventDefault();
     flipCard();
+  } else if (event.key.toLowerCase() === 's') {
+    event.preventDefault();
+    speakCurrentCard();
   } else if (currentMode === 'quiz' && ['1', '2', '3', '4'].includes(event.key)) {
     const idx = Number(event.key) - 1;
     const btn = dom.quizOptions.querySelectorAll('.quiz-opt')[idx];
