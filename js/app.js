@@ -17,8 +17,6 @@ const dom = {
   btnImport: el('btnImport'),
   fileImport: el('fileImport'),
 
-  syncStatus: el('syncStatus'),
-  syncText: el('syncText'),
   quickCaptureToggle: el('quickCaptureToggle'),
   quickCaptureBadge: el('quickCaptureBadge'),
 
@@ -166,23 +164,10 @@ function getActiveSet() {
 }
 
 async function persist() {
-  const ok = await Store.saveSets(state.sets);
-  setSyncStatus(ok ? 'online' : 'offline');
-}
-
-function setSyncStatus(mode) {
-  const labels = {
-    pending: 'Đang kết nối...',
-    online: 'Đã đồng bộ MongoDB',
-    offline: 'Ngoại tuyến - lưu cục bộ',
-  };
-  dom.syncStatus.dataset.state = mode;
-  dom.syncText.textContent = labels[mode] || '';
+  await Store.saveSets(state.sets);
 }
 
 function applySyncResult(result) {
-  setSyncStatus(result.online ? 'online' : 'offline');
-
   if (!result.changed) return;
 
   state.sets = result.sets;
@@ -845,11 +830,6 @@ dom.btnExportPdf.addEventListener('click', exportPdf);
 dom.btnImport.addEventListener('click', () => dom.fileImport.click());
 dom.fileImport.addEventListener('change', importFile);
 
-dom.syncStatus.addEventListener('click', async () => {
-  setSyncStatus('pending');
-  applySyncResult(await Store.sync());
-});
-
 function renderQuickCapture(isEnabled) {
   dom.quickCaptureToggle.dataset.enabled = isEnabled ? 'true' : 'false';
   dom.quickCaptureBadge.textContent = isEnabled ? 'BẬT' : 'TẮT';
@@ -875,11 +855,7 @@ async function init() {
   render();
   dom.inputTerm.focus();
 
-  setSyncStatus('pending');
   applySyncResult(await Store.sync());
-
-  const userId = await Store.getUserId();
-  dom.syncStatus.title = `ID người dùng ẩn danh: ${userId}\nNhấn để đồng bộ lại`;
 }
 
 init();

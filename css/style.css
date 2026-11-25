@@ -223,28 +223,12 @@ button {
   color: #fff;
 }
 
-.sync-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: 0 12px 8px;
-  padding: 7px 9px;
-  font-size: 11px;
-  font-weight: 800;
-  background: var(--surface);
-  border: var(--border);
-  box-shadow: 2px 2px 0 var(--ink);
-  cursor: pointer;
-  user-select: none;
-  transition: transform 0.08s, box-shadow 0.08s;
-}
-
 .quick-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 6px 12px 6px;
+  margin: 6px 12px 10px;
   padding: 6px 9px;
   font-size: 11px;
   font-weight: 800;
@@ -271,43 +255,6 @@ button {
 
 .quick-toggle[data-enabled="false"] .quick-badge {
   background: #e5e5e5;
-}
-
-.sync-status:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
-}
-
-.sync-dot {
-  width: 9px;
-  height: 9px;
-  flex: none;
-  border-radius: 50%;
-  border: 2px solid var(--ink);
-  background: #b8b8b8;
-}
-
-.sync-status[data-state="online"] .sync-dot {
-  background: #2ee66b;
-}
-
-.sync-status[data-state="offline"] .sync-dot {
-  background: #ff8a00;
-}
-
-.sync-status[data-state="pending"] .sync-dot {
-  background: #4d7cff;
-  animation: sync-pulse 1s ease-in-out infinite;
-}
-
-@keyframes sync-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 .sidebar-footer {
