@@ -30,9 +30,9 @@
       </div>
 
       <div class="sidebar-footer">
-        <button id="btnExport" class="btn btn-ghost btn-sm" type="button">Xuất JSON</button>
-        <button id="btnImport" class="btn btn-ghost btn-sm" type="button">Nhập JSON</button>
-        <input type="file" id="fileImport" accept="application/json,.json" hidden>
+        <button id="btnExport" class="btn btn-ghost btn-sm" type="button">Xuất file</button>
+        <button id="btnImport" class="btn btn-ghost btn-sm" type="button">Nhập file</button>
+        <input type="file" id="fileImport" accept="application/json,.json,.xlsx,.xls,.csv" hidden>
       </div>
     </aside>
 
@@ -142,6 +142,31 @@
     </form>
   </div>
 
+  <div id="exportOverlay" class="dialog-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+    <div class="dialog-box">
+      <div class="dialog-header">
+        <h3 id="exportTitle">Chọn định dạng xuất</h3>
+        <button id="exportClose" class="close-btn" title="Đóng" type="button">&times;</button>
+      </div>
+      <p class="dialog-message">Xuất toàn bộ bộ thẻ và từ vựng hiện có sang:</p>
+      <div class="export-options">
+        <button id="btnExportJson" class="btn btn-ghost export-opt-btn" type="button">
+          <span class="export-badge">JSON</span>
+          <span>Sao lưu &amp; nhập lại đầy đủ</span>
+        </button>
+        <button id="btnExportExcel" class="btn btn-ghost export-opt-btn" type="button">
+          <span class="export-badge excel">EXCEL</span>
+          <span>File bảng tính (.xlsx)</span>
+        </button>
+        <button id="btnExportPdf" class="btn btn-ghost export-opt-btn" type="button">
+          <span class="export-badge pdf">PDF</span>
+          <span>Bảng in / lưu thành PDF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/vendor/xlsx.mini.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
 </body>

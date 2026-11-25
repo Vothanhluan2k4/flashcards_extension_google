@@ -62,6 +62,12 @@ const dom = {
   dialogInput: el('dialogInput'),
   dialogCancel: el('dialogCancel'),
   dialogConfirm: el('dialogConfirm'),
+
+  exportOverlay: el('exportOverlay'),
+  exportClose: el('exportClose'),
+  btnExportJson: el('btnExportJson'),
+  btnExportExcel: el('btnExportExcel'),
+  btnExportPdf: el('btnExportPdf'),
 };
 
 let activeDialogResolve = null;
@@ -521,7 +527,20 @@ function prevCard() {
 
 /* ---------- Export / Import ---------- */
 
+function openExportModal() {
+  if (!state.sets.length) {
+    showAlert('Chưa có dữ liệu để xuất.');
+    return;
+  }
+  dom.exportOverlay.classList.remove('hidden');
+}
+
+function closeExportModal() {
+  dom.exportOverlay.classList.add('hidden');
+}
+
 function exportJson() {
+  closeExportModal();
   if (!state.sets.length) {
     showAlert('Chưa có dữ liệu để xuất.');
     return;
@@ -549,35 +568,180 @@ function exportJson() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-async function importJson(event) {
+function exportExcel() {
+  closeExportModal();
+  if (!state.sets.length) {
+    showAlert('Chưa có dữ liệu để xuất.');
+    return;
+  }
+  if (typeof XLSX === 'undefined') {
+    showAlert('Không tìm thấy thư viện Excel.', 'Lỗi');
+    return;
+  }
+
+  const rows = [];
+  state.sets.forEach((set) => {
+    if (!set.words.length) {
+      rows.push({
+        'Bộ thẻ': set.name,
+        'Từ / Cụm từ': '',
+        'Loại từ': '',
+        'Nghĩa / Định nghĩa': '',
+      });
+      return;
+    }
+    set.words.forEach((w) => {
+      rows.push({
+        'Bộ thẻ': set.name,
+        'Từ / Cụm từ': w.term || '',
+        'Loại từ': w.wordType || '',
+        'Nghĩa / Định nghĩa': w.definition || '',
+      });
+    });
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 24 }, { wch: 24 }, { wch: 14 }, { wch: 40 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Flashcards');
+
+  const date = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `flashcards-${date}.xlsx`);
+}
+
+async function exportPdf() {
+  closeExportModal();
+  if (!state.sets.length) {
+    showAlert('Chưa có dữ liệu để xuất.');
+    return;
+  }
+
+  await chrome.storage.local.set({
+    printPayload: {
+      exportedAt: new Date().toISOString(),
+      sets: state.sets,
+    },
+  });
+
+  window.open(chrome.runtime.getURL('print.html'), '_blank');
+}
+
+function normalizeWordType(raw) {
+  const val = String(raw || '').trim();
+  if (!val) return '';
+  const lower = val.toLowerCase();
+  const map = {
+    'danh từ': 'n', 'danh tu': 'n', 'noun': 'n', 'n': 'n',
+    'động từ': 'v', 'dong tu': 'v', 'verb': 'v', 'v': 'v',
+    'tính từ': 'adj', 'tinh tu': 'adj', 'adjective': 'adj', 'adj': 'adj',
+    'trạng từ': 'adv', 'trang tu': 'adv', 'adverb': 'adv', 'adv': 'adv',
+    'giới từ': 'prep', 'gioi tu': 'prep', 'preposition': 'prep', 'prep': 'prep',
+    'liên từ': 'conj', 'lien tu': 'conj', 'conjunction': 'conj', 'conj': 'conj',
+    'đại từ': 'pron', 'dai tu': 'pron', 'pronoun': 'pron', 'pron': 'pron',
+    'thán từ': 'interj', 'than tu': 'interj', 'interjection': 'interj', 'interj': 'interj',
+    'cụm từ': 'phrase', 'cum tu': 'phrase', 'phrase': 'phrase',
+  };
+  return (map[lower] || val).slice(0, 30);
+}
+
+function parseExcelWorkbook(buffer, fileName) {
+  const wb = XLSX.read(buffer, { type: 'array' });
+  const setsMap = new Map();
+  const baseName = fileName.replace(/\.(xlsx|xls|csv)$/i, '').slice(0, 100) || 'Bộ thẻ Excel';
+
+  const findHeaderKey = (keys, candidates) =>
+    keys.find((k) => candidates.includes(k.trim().toLowerCase()));
+
+  wb.SheetNames.forEach((sheetName) => {
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    if (!rows.length) return;
+
+    const keys = Object.keys(rows[0]);
+    const setKey = findHeaderKey(keys, ['bộ thẻ', 'bo the', 'set', 'tên bộ thẻ', 'ten bo the', 'deck']);
+    const termKey = findHeaderKey(keys, ['từ / cụm từ', 'từ', 'tu', 'tu / cum tu', 'term', 'word', 'vocabulary', 'front']) || keys[0];
+    const typeKey = findHeaderKey(keys, ['loại từ', 'loai tu', 'wordtype', 'word type', 'type', 'pos', 'part of speech']);
+    const defKey =
+      findHeaderKey(keys, ['nghĩa / định nghĩa', 'nghĩa', 'nghia', 'định nghĩa', 'dinh nghia', 'definition', 'meaning', 'back']) ||
+      (keys.length > 2 && !setKey && !typeKey ? keys[2] : keys[1]);
+
+    const fallbackSetName = wb.SheetNames.length > 1 || sheetName.toLowerCase() !== 'sheet1'
+      ? sheetName.slice(0, 100)
+      : baseName;
+
+    rows.forEach((row) => {
+      const setName = String(setKey ? row[setKey] : fallbackSetName).trim().slice(0, 100) || fallbackSetName;
+      const term = String(termKey ? row[termKey] : '').trim().slice(0, 200);
+      const wordType = normalizeWordType(typeKey ? row[typeKey] : '');
+      const definition = String(defKey && defKey !== termKey ? row[defKey] : '').trim().slice(0, 500);
+
+      if (!setsMap.has(setName)) {
+        setsMap.set(setName, {
+          id: uid(),
+          name: setName,
+          createdAt: Date.now(),
+          words: [],
+        });
+      }
+
+      if (term) {
+        setsMap.get(setName).words.push({
+          id: uid(),
+          term,
+          wordType,
+          definition,
+          createdAt: Date.now(),
+        });
+      }
+    });
+  });
+
+  return Array.from(setsMap.values()).filter((s) => s.words.length > 0 || setsMap.size === 1);
+}
+
+async function importFile(event) {
   const file = event.target.files && event.target.files[0];
   event.target.value = '';
   if (!file) return;
 
   try {
-    const text = await file.text();
-    const data = JSON.parse(text);
+    let imported = [];
+    const isExcel = /\.(xlsx|xls|csv)$/i.test(file.name);
 
-    if (!data || !Array.isArray(data.sets)) {
-      throw new Error('invalid');
+    if (isExcel) {
+      if (typeof XLSX === 'undefined') {
+        throw new Error('xlsx_missing');
+      }
+      const buffer = await file.arrayBuffer();
+      imported = parseExcelWorkbook(buffer, file.name);
+      if (!imported.length) {
+        throw new Error('empty_excel');
+      }
+    } else {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data || !Array.isArray(data.sets)) {
+        throw new Error('invalid');
+      }
+
+      imported = data.sets.map((s) => ({
+        id: uid(),
+        name: String(s.name || 'Bộ thẻ').slice(0, 100),
+        createdAt: Date.now(),
+        words: Array.isArray(s.words)
+          ? s.words
+              .filter((w) => w && typeof w.term === 'string')
+              .map((w) => ({
+                id: uid(),
+                term: String(w.term).slice(0, 200),
+                wordType: String(w.wordType || '').slice(0, 30),
+                definition: String(w.definition || '').slice(0, 500),
+                createdAt: Date.now(),
+              }))
+          : [],
+      }));
     }
-
-    const imported = data.sets.map((s) => ({
-      id: uid(),
-      name: String(s.name || 'Bộ thẻ').slice(0, 100),
-      createdAt: Date.now(),
-      words: Array.isArray(s.words)
-        ? s.words
-            .filter((w) => w && typeof w.term === 'string')
-            .map((w) => ({
-              id: uid(),
-              term: String(w.term).slice(0, 200),
-              wordType: String(w.wordType || '').slice(0, 30),
-              definition: String(w.definition || '').slice(0, 500),
-              createdAt: Date.now(),
-            }))
-        : [],
-    }));
 
     state.sets = state.sets.concat(imported);
     if (!state.activeSetId && imported.length) {
@@ -588,7 +752,7 @@ async function importJson(event) {
     render();
     await showAlert(`Đã nhập ${imported.length} bộ thẻ.`, 'Nhập thành công');
   } catch (err) {
-    await showAlert('File JSON không hợp lệ.', 'Lỗi');
+    await showAlert('File không hợp lệ hoặc không có dữ liệu từ vựng.', 'Lỗi');
   }
 }
 
@@ -643,6 +807,14 @@ document.addEventListener('keydown', (event) => {
     return;
   }
 
+  if (!dom.exportOverlay.classList.contains('hidden')) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeExportModal();
+    }
+    return;
+  }
+
   if (dom.studyOverlay.classList.contains('hidden')) return;
 
   if (event.key === 'ArrowRight') {
@@ -657,9 +829,19 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-dom.btnExport.addEventListener('click', exportJson);
+dom.btnExport.addEventListener('click', openExportModal);
+dom.exportClose.addEventListener('click', closeExportModal);
+dom.exportOverlay.addEventListener('click', (event) => {
+  if (event.target === dom.exportOverlay) {
+    closeExportModal();
+  }
+});
+dom.btnExportJson.addEventListener('click', exportJson);
+dom.btnExportExcel.addEventListener('click', exportExcel);
+dom.btnExportPdf.addEventListener('click', exportPdf);
+
 dom.btnImport.addEventListener('click', () => dom.fileImport.click());
-dom.fileImport.addEventListener('change', importJson);
+dom.fileImport.addEventListener('change', importFile);
 
 dom.syncStatus.addEventListener('click', async () => {
   setSyncStatus('pending');
